@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { verifyTripOwnership } from "@/lib/auth";
+
 
 const defaultCategories = [
   "Flights",
@@ -21,14 +23,17 @@ export async function GET(req: Request) {
     if (!tripId)
       return NextResponse.json({ error: "Missing tripId" }, { status: 400 });
 
+const { trip, error } = await verifyTripOwnership(tripId);
+  if (error) return error; // Devuelve 401, 403 o 404 si corresponde
+
     // 🔹 Ver si ya existen budgets
-    let budgets = await prisma.budget.findMany({ where: { tripId } });
+    let budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
 
     // 🟩 Si no hay ninguno, crear los de por defecto (solo la primera vez)
     if (budgets.length === 0) {
       await prisma.budget.createMany({
         data: defaultCategories.map((cat) => ({
-          tripId,
+          tripId: trip.id,
           category: cat,
           budget: 0,
           spent: 0,
@@ -36,13 +41,13 @@ export async function GET(req: Request) {
           percentage: 0,
         })),
       });
-      budgets = await prisma.budget.findMany({ where: { tripId } });
+      budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
     }
 
     // 🔹 Calcular spent (desde Expenses)
     const expenses = await prisma.expense.groupBy({
       by: ["category"],
-      where: { tripId },
+      where: { tripId: trip.id },
       _sum: { amount: true },
     });
 
@@ -69,12 +74,15 @@ export async function POST(req: Request) {
     if (!tripId || !Array.isArray(budgets))
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
 
+      const { trip, error } = await verifyTripOwnership(tripId);
+  if (error) return error; // 401, 403, 404
+
     // 🔹 Eliminar los anteriores y crear los nuevos
-    await prisma.budget.deleteMany({ where: { tripId } });
+    await prisma.budget.deleteMany({ where: { tripId: trip.id } });
 
     await prisma.budget.createMany({
       data: budgets.map((b) => ({
-        tripId,
+        tripId: trip.id,
         category: b.category,
         budget: Number(b.budget) || 0,
         spent: Number(b.spent) || 0,

@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 
 
@@ -11,11 +13,16 @@ export async function GET(req: Request) {
 
   try {
     // 🌍 Llamada a OpenStreetMap (Nominatim)
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-        query
-      )}&limit=5&addressdetails=1`
-    );
+const res = await fetch(
+  `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+    query
+  )}&limit=5&addressdetails=1`,
+  {
+    headers: {
+      "User-Agent": "Tripilot/1.0 (+https://tripilot.app)"
+    }
+  }
+);
 
     if (!res.ok) {
       return NextResponse.json(

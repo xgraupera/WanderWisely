@@ -1,10 +1,15 @@
 // app/api/auth/[...nextauth]/route.ts
+export const runtime = "nodejs";
+
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
+
+
+
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -28,16 +33,35 @@ export const authOptions: NextAuthOptions = {
         if (!isValid) {
           throw new Error("Invalid password");
         }
-        return { id: user.id + "", email: user.email, name: user.name || "" };
+        return { id: Number(user.id), email: user.email, name: user.name || "" };
       }
     })
   ],
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 60 * 60, // 1 hora en segundos
+  updateAge: 15 * 60 // 15 minutos para renovar automáticamente si el usuario sigue activo
   },
   pages: {
     signIn: "/"  // redirigir al login en tu home
   },
+  callbacks: {
+  async jwt({ token, user }) {
+    // Cuando el usuario hace login, guardamos su id en el JWT
+    if (user) {
+      token.id = user.id; // 👈 guarda el id real en el JWT
+    }
+    return token;
+  },
+
+  async session({ session, token }) {
+    // Hacemos que session.user.id esté disponible en runtime
+    if (session.user && token.id) {
+      session.user.id = token.id as number;
+    }
+    return session;
+  },
+},
   secret: process.env.NEXTAUTH_SECRET
 };
 

@@ -1,0 +1,16 @@
+{
+  "dashboard": "Tu Panel",
+  "subtitle": "Cada gran aventura comienza aquí. Crea un nuevo viaje o revisa tus viajes en curso.",
+  "createTrip": "Crear Nuevo Viaje",
+  "yourTrips": "Tus Viajes",
+  "loadingTrips": "Cargando viajes...",
+  "noTrips": "¡Aún no has creado un viaje!",
+  "tripsMap": "Mapa de Viajes",
+  "tripName": "Nombre del Viaje",
+  "travelers": "Número de Viajeros",
+  "startDate": "Fecha de Inicio",
+  "endDate": "Fecha de Fin",
+  "latitude": "Latitud (Opcional)",
+  "longitude": "Longitud (Opcional)",
+  "creating": "Creando..."
+}

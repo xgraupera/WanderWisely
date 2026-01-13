@@ -38,7 +38,7 @@ const transporter = nodemailer.createTransport({
           <h2>Don’t forget your cancellation deadline</h2>
           <p>Your reservation <strong>${reminder.reservation.type}</strong> has a cancellation limit on:</p>
           <p><strong>${reminder.sendAt.toLocaleDateString()}</strong></p>
-          <p>WanderWisely</p>
+          <p>Tripilot</p>
         `,
       });
 

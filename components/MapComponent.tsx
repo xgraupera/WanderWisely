@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const markerIcon = new L.Icon({
   iconUrl: "/icon_blue.png",
@@ -16,6 +17,10 @@ interface Trip {
   latitude?: number;
   longitude?: number;
   name?: string;
+  startDate?: string;
+  endDate?: string;
+  travelers?: number;
+  durationDays?:number;
 }
 
 interface MapProps {
@@ -31,6 +36,7 @@ function SetMapCenter({ center }: { center: [number, number] }) {
 }
 
 export default function MapComponent({ trips }: MapProps) {
+  const router = useRouter();
   const defaultCenter: [number, number] = [20, 0];
 
   // 🔥 A partir de aquí ya puedes usar validTrips sin problema
@@ -53,7 +59,7 @@ export default function MapComponent({ trips }: MapProps) {
       center={center}
       zoom={2}
       style={{ height: "100%", width: "100%" }}
-      scrollWheelZoom={true}
+      scrollWheelZoom={false}
     >
       <SetMapCenter center={center} />
 
@@ -68,7 +74,31 @@ export default function MapComponent({ trips }: MapProps) {
           position={[trip.latitude!, trip.longitude!]}
           icon={markerIcon}
         >
-          <Popup>{trip.name || "Unknown"}</Popup>
+          <Popup>
+            <div className="text-xs text-gray-700 leading-tight">
+    {/* 🔗 Título clickable */}
+    <button
+      onClick={() => router.push(`/dashboard/trip/${trip.id}/main`)}
+      className="font-semibold text-[#001e42] hover:underline block text-left mb-0.5"
+    >
+      {trip.name || "Unknown"}
+    </button>
+
+    {/* Fechas + viajeros */}
+    <div className="flex justify-between items-start">
+      <div>
+        
+        <p>
+        {new Date(trip.startDate!).toLocaleDateString()} →{" "}
+        {new Date(trip.endDate!).toLocaleDateString()}
+      </p>
+      <p>
+        {trip.durationDays!} Days | Travelers: {trip.travelers}
+      </p>
+      </div>
+    </div>
+  </div>
+          </Popup>
         </Marker>
       ))}
     </MapContainer>

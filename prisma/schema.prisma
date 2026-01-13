@@ -96,7 +96,7 @@ model Checklist {
 }
 
 model Expense {
-  id                Int      @id @default(autoincrement())
+  id               String   @id @default(uuid())
   tripId            Int
   userId            String
   date              DateTime

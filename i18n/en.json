@@ -1,0 +1,16 @@
+{
+  "dashboard": "Your Dashboard",
+  "subtitle": "Every great adventure begins here. Create a new trip or revisit your ongoing journeys.",
+  "createTrip": "Create New Trip",
+  "yourTrips": "Your Trips",
+  "loadingTrips": "Loading trips...",
+  "noTrips": "You have not created a trip yet!",
+  "tripsMap": "Trips Map",
+  "tripName": "Trip Name",
+  "travelers": "Number of Travelers",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "latitude": "Latitude (Optional)",
+  "longitude": "Longitude (Optional)",
+  "creating": "Creating..."
+}
