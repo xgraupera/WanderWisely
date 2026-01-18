@@ -1,8 +1,9 @@
-// middleware.ts
-import { withAuth } from "next-auth/middleware";
+// proxy.ts
+import { withAuth } from "next-auth/middleware"; // <--- sigue siendo "middleware"
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Configuración de rutas protegidas
 export const config = {
   matcher: [
     "/(en|es)?/dashboard/:path*",
@@ -12,8 +13,9 @@ export const config = {
   ],
 };
 
+// Exporta withAuth como Proxy
 export default withAuth(
-  function middleware(req: NextRequest) {
+  function proxy(req: NextRequest) {
     return NextResponse.next();
   },
   {
@@ -24,7 +26,7 @@ export default withAuth(
       },
     },
     pages: {
-      // 🔁 Si NO hay sesión → landing
+      // 🔁 Si NO hay sesión → landing page
       signIn: "/",
     },
   }
