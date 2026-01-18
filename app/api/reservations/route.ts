@@ -24,7 +24,7 @@ const { trip, session } = result;
     });
 
     const budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
-    const categories = budgets.map((b) => b.category);
+    const categories = budgets.map((b: typeof budgets[number]) => b.category);
 
     return NextResponse.json({ reservations, categories });
   } catch (error: any) {

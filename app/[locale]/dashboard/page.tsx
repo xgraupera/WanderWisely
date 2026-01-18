@@ -5,7 +5,7 @@ import Link from "next/link";
 import NavBar from "@/components/NavBar";
 import FooterBar from "@/components/FooterBar";
 import dynamic from "next/dynamic";
-import "leaflet/dist/leaflet.css";
+/* import "leaflet/dist/leaflet.css"; */
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // Ajusta la ruta según tu proyecto
@@ -15,12 +15,12 @@ import en from "@/i18n/en.json";
 import es from "@/i18n/es.json";
 import { SessionProvider } from "next-auth/react";
 
+/* 
 const MapComponent = dynamic(
   () => import("@/components/MapComponent"),
   { ssr: false }
 );
-
-
+ */
 
 export default function DashboardPage() {
   const params = useParams();
@@ -338,11 +338,11 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
 
   
 
-
+{/*
 <section className="w-full h-[400px] rounded-xl overflow-hidden shadow">
   <MapComponent trips={trips} />
 </section>
-
+*/}
 
 
 

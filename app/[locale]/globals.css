@@ -31,7 +31,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
+/* 
 .leaflet-container {
   z-index: 0 !important;
 }
@@ -47,24 +47,26 @@ body {
   padding-right: 20px !important; 
 }
 
-
+ */
+ /* 
 .leaflet-popup-content p {
   margin: 0 !important;
   padding: 0 !important;
 }
-
+ 
 .leaflet-popup-close-button {
-  color: #dc2626 !important;        /* rojo Tailwind red-600 */
+  color: #dc2626 !important;        
   font-size: 18px !important;
   font-weight: bold;
   top: 4px !important;
   right: 6px !important;
 }
 
+ 
 .leaflet-popup-close-button:hover {
-  color: #b91c1c !important;       /* red-700 */
+  color: #b91c1c !important;       
 }
-
+ */
 .btn-add {
   @apply bg-[#001e42] text-white px-10 py-4 rounded-xl leading-none inline-flex items-center justify-center hover:bg-[#DCC9A3] transition shadow-lg hover:scale-105 hover:bg-[#e6d6b3];
 }

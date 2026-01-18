@@ -65,13 +65,15 @@ const { trip, error } = await verifyTripOwnership(tripId);
     });
 
     // 🔹 Actualizar los campos derivados
-    const updated = budgets.map((b) => {
-      const match = expenses.find((e) => e.category === b.category);
-      const spent = match?._sum.amount || 0;
-      const over = Math.max(0, spent - b.budget);
-      const percentage = b.budget ? (spent / b.budget) * 100 : 0;
-      return { ...b, spent, overbudget: over, percentage };
-    });
+   const updated = budgets.map((b: typeof budgets[number]) => {
+const match = expenses.find((e: { category: string; _sum: { amount: number | null } }) => 
+    e.category === b.category
+  );
+  const spent = match?._sum.amount || 0;
+  const over = Math.max(0, spent - b.budget);
+  const percentage = b.budget ? (spent / b.budget) * 100 : 0;
+  return { ...b, spent, overbudget: over, percentage };
+})
 
     return NextResponse.json(updated);
   } catch (error: any) {
