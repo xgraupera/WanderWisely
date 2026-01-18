@@ -1,16 +1,161 @@
 {
+  "title": "Tripilot | Plan Smarter. Travel Freely.",
+  "description": "Tripilot is your financial copilot for longer trips. Track spending, forecast risks, and avoid budget surprises while you travel.",
+  "hero": {
+    "headline": "Tripilot",
+    "subheadline": "Your financial copilot for longer trips.",
+    "subheadline2": "Plan your budget, track your spending, and know before it’s too late if your trip is going off track.",
+    "subheadline3": "Avoid budget surprises. Know early if your trip is going off track.",
+    "buttontitle": "Ready to travel without money stress?",
+    "cta": "Create your trip"
+  },
+  "why": {
+    "title": "Most trips don’t fail on planning. They fail on money.",
+    "cards": {
+      "budgeting": {
+        "title": "Smart Budgeting",
+        "desc": "Track your expenses and plan budgets effortlessly."
+      },
+      "forecast": {
+        "title": "Spending Forecast",
+        "desc": "See if your current pace puts the rest of your trip at risk — before it’s too late."
+      },
+      "warnings": {
+        "title": "Early Warnings",
+        "desc": "Know which category is breaking your budget — before it ruins your trip."
+      },
+      "itinerary": {
+        "title": "Organized Itineraries",
+        "desc": "Plan day-by-day trips cleanly, no messy spreadsheets."
+      }
+    }
+  },
+  "how": {
+    "title": "How Tripilot works",
+    "steps": {
+      "one": {
+        "title": "1. Set your trip budget",
+        "desc": "Define how much you plan to spend for each category before you travel."
+      },
+      "two": {
+        "title": "2. Log expenses",
+        "desc": "Track your spending in seconds as you travel, no spreadsheets required."
+      },
+      "three": {
+        "title": "3. Stay on track",
+        "desc": "Tripilot warns you early if your spending pace will break your budget — and tells you how to adjust."
+      }
+    }
+  },
   "dashboard": "Your Dashboard",
-  "subtitle": "Every great adventure begins here. Create a new trip or revisit your ongoing journeys.",
-  "createTrip": "Create New Trip",
   "yourTrips": "Your Trips",
-  "loadingTrips": "Loading trips...",
   "noTrips": "You have not created a trip yet!",
-  "tripsMap": "Trips Map",
+  "createTrip": "Create New Trip",
   "tripName": "Trip Name",
   "travelers": "Number of Travelers",
   "startDate": "Start Date",
   "endDate": "End Date",
   "latitude": "Latitude (Optional)",
   "longitude": "Longitude (Optional)",
-  "creating": "Creating..."
+  "creating": "Creating...",
+  "deleteTripConfirm": "Are you sure you want to delete this trip?",
+  "loadingTrips": "Loading trips...",
+  "weatherNotAvailable": "Weather not available",
+  "tripsMap": "Trips Map",
+  "errorCreatingTrip": "Error creating trip",
+  "networkError": "Network error creating trip",
+  "endDateBeforeStart": "End date cannot be earlier than the start date.",
+  "requiredFields": "Start and End dates are required.",
+  "main": "Main",
+  "budget": "Budget",
+  "itinerary": "Itinerary",
+  "reservations": "Reservations",
+  "checklist": "Checklist",
+  "expenses": "Expenses",
+  "profile": "Profile",
+  "logout": "Logout",
+  "about": "About",
+  "aboutUs": "About Us",
+  "contact": "Contact",
+  "privacyPolicy": "Privacy Policy",
+  "termsConditions": "Terms & Conditions",
+  "language": "Language",
+  "english": "English",
+  "spanish": "Español",
+  "version": "Version",
+  "aboutpage": {
+    "title": "🌍 About Tripilot",
+    "p1": "Tripilot was born from a love of travel and a passion for simple, smart planning. We believe every journey — whether across the world or across your country — deserves to be well organized, budget-conscious, and memorable for the right reasons.",
+    "p2": "Our mission is to empower travelers to plan, track, and experience their adventures with confidence. Tripilot combines intuitive design with practical tools for managing budgets, checklists, itineraries, and shared travel expenses.",
+    "p3": "We’re a small, independent team of explorers, designers, and developers who understand the challenges of planning trips. Tripilot is built for travelers, by travelers.",
+    "footer": "Your financial copilot for longer trips. ✈️"
+  },
+  "contactpage": {
+    "title": "📬 Contact Us",
+    "intro": "We’d love to hear from you! Whether you have a question, feedback, or partnership idea, we’re always happy to connect with fellow travelers and creators.",
+    "name": "Your Name",
+    "email": "Email",
+    "message": "Message",
+    "namePlaceholder": "John Traveler",
+    "emailPlaceholder": "you@example.com",
+    "messagePlaceholder": "Write your message...",
+    "send": "Send Message",
+    "direct": "Or email us directly at"
+  },
+  "categories": {
+    "flights": "Flights",
+    "accommodation": "Accommodation",
+    "internal_transport": "Internal Transport",
+    "health": "Health",
+    "documentation": "Documentation",
+    "activities": "Activities",
+    "meals": "Meals",
+    "technology_sim": "Technology / SIM",
+    "others": "Others"
+  },
+  "budgetpage": {
+    "title": "💰 Budget Planning",
+    "intro": "Travel freely by planning wisely. Set your budget for each category and let Tripilot help you stay on track every step of the journey.",
+    "loading": "Loading trip information...",
+    "totalBudget": "Total Budget",
+    "totalSpent": "Total Spent",
+    "overbudget": "Overbudget",
+    "budgetLabel": "Budget (€)",
+    "spentLabel": "Spent (€)",
+    "overbudgetLabel": "Overbudget (€)",
+    "used": "used",
+    "left": "left",
+    "newCategoryPlaceholder": "New Category Name",
+    "addCategory": "+ Add Category",
+    "save": "Save Budget",
+    "saving": "Saving...",
+    "savedOk": "✅ Budget saved!",
+    "savedError": "❌ Error saving budget",
+    "serverError": "❌ Network or server error",
+    "cannotDelete": "⚠️ This category cannot be deleted because it already has expenses.",
+    "confirmDelete": "Are you sure you want to delete"
+  },
+
+  "checklistpage": {
+    "title": "🧾 Travel Checklist",
+    "intro": "Don’t leave anything behind. Create your packing list, check off what’s ready, and travel knowing you have everything you need.",
+    "loading": "Loading trip information...",
+    "addItem": "Add Item",
+    "save": "Save Checklist",
+    "saving": "Saving...",
+    "savedOk": "✅ Checklist saved!",
+    "savedError": "❌ Error saving checklist.",
+    "networkError": "❌ Network or server error",
+    "noTask": "No Task",
+    "notes": "Notes",
+    "edit": "Edit Item",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "editTitle": "Edit Item",
+    "addTitle": "Add New Item",
+    "task": "Task",
+    "notesPlaceholder": "Notes",
+    "taskPlaceholder": "Task",
+    "add": "Add",
+    "taskRequired": "Please enter a task name."
+  }
 }

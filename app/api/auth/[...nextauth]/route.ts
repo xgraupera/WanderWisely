@@ -39,8 +39,8 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60, // 1 hora en segundos
-  updateAge: 15 * 60 // 15 minutos para renovar automáticamente si el usuario sigue activo
+    maxAge: 60 * 60 * 24 * 30, // 30 dias en segundos
+  updateAge: 60 * 60 * 24, // renueva cada 24h si hay actividad
   },
   pages: {
     signIn: "/"  // redirigir al login en tu home

@@ -38,6 +38,7 @@ model Trip {
   checklists   Checklist[]
   expenses     Expense[]
   createdAt    DateTime      @default(now())
+  hasCompletedBudgetSetup Boolean @default(false)
 }
 
 model Budget {
@@ -49,6 +50,7 @@ model Budget {
   percentage Float  @default(0)
   tripId     Int
   trip       Trip   @relation(fields: [tripId], references: [id])
+  type      String  @default("mixed")
 
   @@unique([tripId, category])
 }
@@ -70,9 +72,10 @@ model Reservation {
   id          Int      @id @default(autoincrement())
   type        String
   provider    String
-  bookingDate DateTime
-  date        DateTime?
-  cancellationDate DateTime? 
+  bookingDate      DateTime?
+  startDate        DateTime?
+  endDate          DateTime?
+  cancellationDate DateTime?
   amount      Float
   confirmed   Boolean  @default(false)
   link        String?

@@ -15,6 +15,18 @@ const defaultCategories = [
   "Others",
 ];
 
+const CATEGORY_TYPE_MAP: Record<string, "fixed" | "variable" | "mixed"> = {
+  Flights: "fixed",
+  Documentation: "fixed",
+  Health: "fixed",
+  Accommodation: "mixed",
+  "Internal Transport": "mixed",
+  Activities: "mixed",
+  "Technology/SIM": "mixed",
+  Others: "mixed",
+  Meals: "variable",
+};
+
 // 🟢 GET budgets (lee presupuestos y gastos)
 export async function GET(req: Request) {
   try {
@@ -39,6 +51,7 @@ const { trip, error } = await verifyTripOwnership(tripId);
           spent: 0,
           overbudget: 0,
           percentage: 0,
+          type: CATEGORY_TYPE_MAP[cat] ?? "mixed", // ✅ aquí
         })),
       });
       budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
@@ -88,6 +101,7 @@ export async function POST(req: Request) {
         spent: Number(b.spent) || 0,
         overbudget: Math.max(0, (b.spent || 0) - (b.budget || 0)),
         percentage: b.budget ? ((b.spent || 0) / b.budget) * 100 : 0,
+        type: b.type ?? "mixed", // ✅ aquí también
       })),
     });
 

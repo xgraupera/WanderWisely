@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import { Plus } from "lucide-react";
-
+import BudgetSetupWizard from "@/components/BudgetSetupWizard";
 
 interface Props {
   params: { tripId: string };
@@ -34,7 +34,9 @@ export default function TripMainPage() {
   const [isSaving, setIsSaving] = useState(false);
 const [description, setDescription] = useState("");
 const [cities, setCities] = useState<{ name: string; country?: string; latitude?: number | null; longitude?: number | null }[]>([]);
+const locale = params?.locale || "en"; // 🔹 fallback
 
+const [showBudgetSetup, setShowBudgetSetup] = useState(false);
 
 const [cityInput, setCityInput] = useState("");
 const [citiesWeather, setCitiesWeather] = useState<
@@ -195,6 +197,10 @@ results.push({
         latitude:data.latitude || 0,
         longitude:data.longitude || 0,
       });
+      if (data.hasCompletedBudgetSetup === false) {
+  setShowBudgetSetup(true);
+}
+
       setBudget(data.totalBudget || 0);
       setSpent(data.spentSoFar || 0);
       setDescription(data.description || "");
@@ -285,12 +291,20 @@ function removeCity(index: number) {
     }
   }
 
+function handleBudgetSetupComplete(totalBudget: number) {
+  setBudget(totalBudget);
+  setShowBudgetSetup(false);
+}
+
+
+
+
   if (!trip) {
     return (
       <>
       <SessionProvider>
         <NavBar tripId={tripId}  /> 
-        <main className="p-8 text-center pt-20">
+        <main className="p-8 text-center bg-gray-50 pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
         </SessionProvider>
@@ -301,12 +315,22 @@ function removeCity(index: number) {
   const percentage = budget ? ((spent / budget) * 100).toFixed(1) : "0";
   const remaining = (budget - spent).toFixed(2);
 
-    
+  
+
 
 
   return (
   <>
   <SessionProvider>
+
+     {showBudgetSetup && trip && (
+        <BudgetSetupWizard
+          tripId={trip.id}
+          onComplete={handleBudgetSetupComplete}
+        />
+      )}
+
+
     {/* ✅ Navbar fija arriba */}
     <NavBar tripId={tripId}  />
 
@@ -450,7 +474,9 @@ function removeCity(index: number) {
           {isSaving ? "Saving..." : "Save Changes"}
         </button>
         <button
-          onClick={() => router.push('/dashboard')}
+              onClick={() => router.push(`/${locale}/dashboard`)}
+
+
           className="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg hover:bg-gray-300 transition"
         >
           ← Back to Dashboard
@@ -464,14 +490,14 @@ function removeCity(index: number) {
       <ul className="space-y-3">
         {[
           { href: "budget", icon: "💰", text: "Budget Planning" },
-          { href: "itinerary", icon: "🗓️", text: "Trip Itinerary" },
+
           { href: "reservations", icon: "✈️", text: "Reservations Tracker" },
-          { href: "checklist", icon: "🧾", text: "Travel Checklist" },
+
           { href: "expenses", icon: "💳", text: "Expense Log" },
-        ].map((item) => (
+         ].map((item) => (
           <li key={item.href}>
             <a
-              href={`/dashboard/trip/${tripId}/${item.href}`}
+              href={`/${locale}/dashboard/trip/${tripId}/${item.href}`}
               className="block w-full text-center bg-[#001e42] text-white px-4 py-2.5 rounded-lg hover:bg-[#DCC9A3] transition"
             >
               {item.icon} {item.text}
@@ -479,12 +505,18 @@ function removeCity(index: number) {
           </li>
         ))}
       </ul>
+       {/*{ href: "itinerary", icon: "🗓️", text: "Trip Itinerary" },
+          { href: "checklist", icon: "🧾", text: "Travel Checklist" },
+           */}
     </aside>
 </div>
+
+{/*
 <section className="w-full bg-white/90 backdrop-blur-sm p-8 rounded-xl shadow-sm border border-gray-100 space-y-6 mt-8">
   <h2 className="text-2xl font-semibold text-[#001e42] mb-4">Trip Info</h2>
-
+*/}
   {/* Descripción */}
+  {/*
   <div>
     <label className="block mb-1">Brief Description</label>
     <textarea
@@ -498,14 +530,17 @@ function removeCity(index: number) {
       
     />
   </div>
+  */}
 
   {/* Clima principal (pais del viaje) */}
+  {/*
   <div className="mt-4">
     <h3 className="font-semibold mb-2">Main Destination Weather</h3>
     <div className="p-4 bg-white rounded-lg shadow-sm">
       
       {mainWeather ? (
   <>
+  
     <p>
       {mainWeather.temp}°C | {mainWeather.tempMin}°C
     </p>
@@ -520,12 +555,15 @@ function removeCity(index: number) {
 
     </div>
   </div>
+  */}
 
   {/* Ciudades adicionales */}
+  {/*
   <div className="mt-4">
     <label className="block mb-2">Add Cities to Track Weather</label>
     <div className="flex gap-2 mb-3">
       <div className="relative flex-1">
+        
   <input
     type="text"
     placeholder="Rome"
@@ -539,6 +577,8 @@ function removeCity(index: number) {
     className="border p-2  border-gray-200 rounded-lg w-full"
   />
 
+*/}
+{/*
   {showSuggestions && suggestions.length > 0 && (
                 <ul className="absolute z-10 bg-white border rounded-lg shadow-md w-full mt-1 max-h-40 overflow-y-auto">
       {suggestions.map((c, i) => (
@@ -571,7 +611,8 @@ function removeCity(index: number) {
     
   </div>
 </section>
-
+*/}
+{/*
 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {citiesWeather.map((c, i) => (
   <div key={i} className="p-4 bg-white rounded-lg shadow-sm relative">
@@ -589,7 +630,7 @@ function removeCity(index: number) {
 ))}
     </div>
 
-
+*/}
 
     
   

@@ -1,106 +1,148 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef, useMemo } from "react";
 import L from "leaflet";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import "leaflet.markercluster";
+import { useRouter, useParams } from "next/navigation";
 
-const markerIcon = new L.Icon({
+/* 🟦 Icono personalizado */
+const markerIcon = L.icon({
   iconUrl: "/icon_blue.png",
   iconSize: [30, 30],
   iconAnchor: [15, 30],
+  popupAnchor: [0, -28],
 });
 
-interface Trip {
-  id: number;
-  latitude?: number;
-  longitude?: number;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-  travelers?: number;
-  durationDays?:number;
-}
+export default function MapComponent({ trips }: { trips: any[] }) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-interface MapProps {
-  trips: Trip[];
-}
-
-function SetMapCenter({ center }: { center: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, map.getZoom(), { animate: false });
-  }, [center, map]);
-  return null;
-}
-
-export default function MapComponent({ trips }: MapProps) {
   const router = useRouter();
-  const defaultCenter: [number, number] = [20, 0];
+  const params = useParams();
+  const locale = (params as any)?.locale || "en";
 
-  // 🔥 A partir de aquí ya puedes usar validTrips sin problema
-  const validTrips = trips.filter(
-    (t) => t.latitude != null && t.longitude != null
+  const validTrips = useMemo(
+    () => trips.filter(t => t.latitude != null && t.longitude != null),
+    [trips]
   );
 
-  const center: [number, number] =
-    validTrips.length > 0
-      ? [
-          validTrips.reduce((sum, t) => sum + (t.latitude || 0), 0) /
-            validTrips.length,
-          validTrips.reduce((sum, t) => sum + (t.longitude || 0), 0) /
-            validTrips.length,
-        ]
-      : defaultCenter;
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
 
-  return (
-    <MapContainer
-      center={center}
-      zoom={2}
-      style={{ height: "100%", width: "100%" }}
-      scrollWheelZoom={false}
-    >
-      <SetMapCenter center={center} />
+    /* 🗺️ Crear mapa */
+    const map = L.map(containerRef.current, {
+      center: [20, 0],
+      zoom: 2,
+      scrollWheelZoom: false,
+    });
 
-      <TileLayer
-        attribution='&copy; OpenStreetMap'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+    mapRef.current = map;
 
-      {validTrips.map((trip) => (
-        <Marker
-          key={trip.id}
-          position={[trip.latitude!, trip.longitude!]}
-          icon={markerIcon}
-        >
-          <Popup>
-            <div className="text-xs text-gray-700 leading-tight">
-    {/* 🔗 Título clickable */}
-    <button
-      onClick={() => router.push(`/dashboard/trip/${trip.id}/main`)}
-      className="font-semibold text-[#001e42] hover:underline block text-left mb-0.5"
-    >
-      {trip.name || "Unknown"}
-    </button>
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+    }).addTo(map);
 
-    {/* Fechas + viajeros */}
-    <div className="flex justify-between items-start">
-      <div>
-        
-        <p>
-        {new Date(trip.startDate!).toLocaleDateString()} →{" "}
-        {new Date(trip.endDate!).toLocaleDateString()}
-      </p>
-      <p>
-        {trip.durationDays!} Days | Travelers: {trip.travelers}
-      </p>
-      </div>
-    </div>
-  </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
-  );
+    /* 🔗 Clusters */
+    const cluster = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+    });
+
+    /* 📍 Marcadores */
+    validTrips.forEach(trip => {
+      const marker = L.marker(
+        [trip.latitude, trip.longitude],
+        { icon: markerIcon }
+      );
+
+      const popupHtml = `
+        <div style="min-width:200px">
+          <h3
+            id="trip-${trip.id}"
+            style="
+              font-weight:600;
+              margin-bottom:4px;
+              color:#001e42;
+              cursor:pointer;
+            "
+          >
+            ${trip.name}
+          </h3 >
+          <p  className="flex justify-between items-start text-sm text-gray-600 style="font-size:12px;color:#555">
+            ${new Date(trip.startDate).toLocaleDateString()} →
+            ${new Date(trip.endDate).toLocaleDateString()}
+          </p>
+          <p className="flex justify-between items-start text-sm text-gray-600 style="font-size:12px;color:#555">
+  ${trip.durationDays} Days | Travelers: ${trip.travelers}
+</p>
+        </div>
+        <style>
+          .leaflet-popup-close-button {
+            color: red !important;
+          }
+        </style>
+      `;
+
+      marker.bindPopup(popupHtml);
+
+      marker.on("popupopen", () => {
+        const title = document.getElementById(`trip-${trip.id}`);
+        if (title) {
+          title.onclick = () => {
+            router.push(`/${locale}/dashboard/trip/${trip.id}/main`);
+          };
+        }
+      });
+
+      cluster.addLayer(marker);
+    });
+
+    map.addLayer(cluster);
+
+   
+    /* 🎯 Ajustar vista SOLO si hay 2 o más trips */
+     {/*
+    if (validTrips.length > 1) {
+      const bounds = cluster.getBounds();
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+*/}
+
+    /* 🔳 Fullscreen (estilo Leaflet, arriba derecha) */
+    const fullscreenControl = L.Control.extend({
+      options: { position: "topright" },
+      onAdd: () => {
+        const container = L.DomUtil.create(
+          "div",
+          "leaflet-bar leaflet-control"
+        );
+
+        const btn = L.DomUtil.create("a", "", container);
+        btn.innerHTML = "⛶";
+        btn.href = "#";
+        btn.title = "Fullscreen";
+        btn.style.fontSize = "18px";
+        btn.style.textAlign = "center";
+
+        L.DomEvent.on(btn, "click", e => {
+          L.DomEvent.stop(e);
+          containerRef.current?.requestFullscreen();
+        });
+
+        return container;
+      },
+    });
+
+    map.addControl(new fullscreenControl());
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [validTrips, router, locale]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
 }

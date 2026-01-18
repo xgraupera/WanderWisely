@@ -19,6 +19,8 @@ import { SessionProvider } from "next-auth/react";
 
 interface Expense {
    id?: string;
+   tempId?: string; 
+   createdAt?: number; 
   date: string;
   place: string;
   category: string;
@@ -41,6 +43,8 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const locale = params?.locale || "en"; // 🔹 fallback
+  
   const [filter, setFilter] = useState<string>("All");
   const [modalOpen, setModalOpen] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
@@ -57,6 +61,62 @@ export default function ExpensesPage() {
   // ✏️ Estados para editar un gasto existente
 const [editModalOpen, setEditModalOpen] = useState(false);
 const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
+
+const loadData = async () => {
+  try {
+    const [tripRes, expRes, budRes] = await Promise.all([
+      fetch(`/api/trips/${tripId}`),
+      fetch(`/api/expenses?tripId=${tripId}&userId=${userId || "demo"}`),
+      fetch(`/api/budget?tripId=${tripId}`),
+    ]);
+
+    const tripData = await tripRes.json();
+    const expData = await expRes.json();
+    const budData = await budRes.json();
+
+    if (tripData?.travelers) setNumTravelers(tripData.travelers);
+
+    const defaultCats = [
+      "Flights",
+      "Accommodation",
+      "Internal Transport",
+      "Insurance",
+      "Visa",
+      "Activities",
+      "Meals",
+      "SIM",
+      "Others",
+    ];
+
+    const budgetCats =
+      Array.isArray(budData) && budData.length > 0
+        ? budData.map((b) => b.category)
+        : defaultCats;
+
+    if (!budgetCats.includes("Others")) budgetCats.push("Others");
+    setCategories(budgetCats);
+
+    if (Array.isArray(expData)) {
+      const formatted = expData.map((e: any) => ({
+        ...e,
+        id: String(e.id),
+        createdAt: new Date(e.createdAt).getTime(),
+        doNotSplit: e.doNotSplit || false,
+        date: e.date
+          ? new Date(e.date).toISOString().split("T")[0]
+          : "",
+      }));
+      setExpenses(formatted);
+    } else {
+      setExpenses([]);
+    }
+  } catch (err) {
+    console.error("Error loading expenses:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   // 🟢 Load user (NextAuth)
@@ -109,6 +169,7 @@ const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
           const formatted = expData.map((e: any) => ({
             ...e,
             id: String(e.id),
+            createdAt: new Date(e.createdAt).getTime(),
             doNotSplit: e.doNotSplit || false,
             date: e.date ? new Date(e.date).toISOString().split("T")[0] : "",
           }));
@@ -137,7 +198,44 @@ const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
     );
   }, [numTravelers]);
 
+
+const saveSingleExpense = async (expense: Expense) => {
+  if (!expense.id) return; // 👈 CLAVE
+
+  try {
+    const res = await fetch("/api/expenses", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tripId: Number(tripId),
+        expense,
+      }),
+    });
+
+    if (!res.ok) {
+      const result = await res.json();
+      alert("❌ Error updating expense: " + result.error);
+    }
+  } catch {
+    alert("❌ Network error updating expense");
+  }
+};
+
+
+  const formatExpenseDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  const localeCode = locale === "es" ? "es-ES" : "en-GB";
+  return d.toLocaleDateString(localeCode, {
+    weekday: "short", // Wed / Mié
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
   // 💾 Save
+  {/* 
   const saveExpenses = async () => {
     const uniquePaidBy = new Set(
       expenses
@@ -169,33 +267,85 @@ const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
     }
   };
 
+*/}
+const saveExpenses = async () => {
+  alert("✅ All expenses are already saved");
+  await loadData(); // opcional: re-sync con backend
+};
+
+
+
+
+
   // ➕ Add expense (via modal)
-const handleAddExpense = () => {
-  const tempSet = new Set(
-    expenses
-      .map((e) => e.paidBy)
-      .filter((p) => p && p.toLowerCase() !== "split")
-  );
-
-  if (newExpense.paidBy && !tempSet.has(newExpense.paidBy)) {
-    tempSet.add(newExpense.paidBy);
-  }
-
-  if (tempSet.size > numTravelers) {
-    alert(`❌ More unique "Paid By" than travelers (${numTravelers})`);
+const handleAddExpense = async () => {
+  if (!userId) {
+    alert("⏳ Waiting for user info");
     return;
   }
 
-  const expense = {
-    ...newExpense,
-    
-    amountPerTraveler: newExpense.doNotSplit
-      ? newExpense.amount
-      : newExpense.amount / (numTravelers || 1),
+  const normalizedDate = new Date(newExpense.date)
+  .toISOString()
+  .split("T")[0];
+
+  const expensePayload = {
+  ...newExpense,
+  date: normalizedDate,
+  amountPerTraveler: newExpense.doNotSplit
+    ? newExpense.amount
+    : newExpense.amount / (numTravelers || 1),
+};
+
+  // 1️⃣ crear ID temporal
+  const tempId = crypto.randomUUID();
+
+  const optimisticExpense: Expense = {
+    ...expensePayload,
+    tempId,
   };
 
-  setExpenses((prev) => [...prev, expense]);
+  // 2️⃣ mostrar inmediatamente
+  setExpenses((prev) => [...prev, optimisticExpense]);
   setModalOpen(false);
+
+  try {
+    // 3️⃣ enviar al backend
+    const res = await fetch("/api/expenses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tripId: Number(tripId),
+        expenses: [expensePayload],
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+   const saved = data.expenses[0];
+
+    // 4️⃣ reemplazar temp por real
+    const normalizedSaved: Expense = {
+  ...saved,
+  id: String(saved.id),
+  createdAt: new Date(saved.createdAt).getTime(),
+  date: new Date(saved.date).toISOString().split("T")[0],
+};
+
+setExpenses((prev) =>
+  prev.map((e) =>
+    e.tempId === tempId ? normalizedSaved : e
+  )
+);
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error saving expense");
+
+    // rollback
+    setExpenses((prev) => prev.filter((e) => e.tempId !== tempId));
+  }
+
+  // reset form
   setNewExpense({
     date: new Date().toISOString().split("T")[0],
     place: "",
@@ -210,11 +360,40 @@ const handleAddExpense = () => {
 
 
 
-  const deleteExpense = (index: number) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      setExpenses((prev) => prev.filter((_, i) => i !== index));
+
+
+const deleteExpense = async (index: number) => {
+  const expenseToDelete = expenses[index];
+  if (!expenseToDelete?.id) {
+    // si no tiene id, solo eliminar localmente
+    setExpenses((prev) => prev.filter((_, i) => i !== index));
+    return;
+  }
+
+  if (!window.confirm("Are you sure you want to delete this expense?")) return;
+
+  try {
+    // eliminar del backend
+    const res = await fetch(`/api/expenses?id=${expenseToDelete.id}`, {
+      method: "DELETE",
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert("❌ Error deleting expense: " + result.error);
+      return;
     }
-  };
+
+    // eliminar del estado local
+    setExpenses((prev) => prev.filter((_, i) => i !== index));
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Network error deleting expense");
+  }
+};
+
 
   // 🗓️ Group by date
   const grouped = expenses.reduce((acc, e) => {
@@ -228,11 +407,23 @@ const handleAddExpense = () => {
       ? expenses
       : expenses.filter((e) => e.category === filter);
 
-  const groupedFiltered = filteredExpenses.reduce((acc, e) => {
-    if (!acc[e.date]) acc[e.date] = [];
-    acc[e.date].push(e);
-    return acc;
-  }, {} as Record<string, Expense[]>);
+
+const sortedExpenses = [...filteredExpenses].sort((a, b) => {
+  // fecha primero
+  if (a.date !== b.date) {
+    return a.date < b.date ? 1 : -1;
+  }
+  // dentro de la misma fecha → createdAt
+  return (b.createdAt || 0) - (a.createdAt || 0);
+});
+
+
+ const groupedFiltered = sortedExpenses.reduce((acc, e) => {
+  if (!acc[e.date]) acc[e.date] = [];
+  acc[e.date].push(e);
+  return acc;
+}, {} as Record<string, Expense[]>);
+
 
   const colors = [
     "#001e42",
@@ -267,12 +458,16 @@ const handleAddExpense = () => {
 
   const totalByPaid = paidBySummary.reduce((s, c) => s + c.value, 0);
 
+  const usedCategories = Array.from(
+  new Set(expenses.map((e) => e.category))
+).sort();
+
   if (loading)
     return (
       <>
       <SessionProvider>
         <NavBar tripId={tripId} />
-        <main className="p-8 text-center pt-20">
+        <main className="p-8 text-center bg-gray-50 pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
         </SessionProvider>
@@ -292,29 +487,42 @@ const handleAddExpense = () => {
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-3 mb-6">
-          {["All", ...categories].map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`px-4 py-2 rounded-full border text-sm transition ${
-                filter === cat
-                  ? "bg-[#001e42] text-white border-[#001e42]"
-                  : "bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+  {["All", ...usedCategories].map((cat) => (
+    <button
+      key={cat}
+      onClick={() => setFilter(cat)}
+      className={`px-4 py-2 rounded-full border text-sm transition ${
+        filter === cat
+          ? "bg-[#001e42] text-white border-[#001e42]"
+          : "bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
+      }`}
+    >
+      {cat}
+    </button>
+  ))}
+</div>
+
 
         {/* Add Expense Button */}
         <div className="flex justify-center">
-          <Button
+          <button
             onClick={() => setModalOpen(true)}
-            className="bg-[#001e42] text-white hover:bg-[#DCC9A3] transition"
+            className="
+    bg-[#001e42] 
+    text-white 
+    px-10 py-4 
+    rounded-xl 
+    leading-none 
+    inline-flex items-center justify-center
+    hover:bg-[#DCC9A3] 
+    transition 
+    shadow-lg 
+    hover:scale-105 
+    hover:bg-[#e6d6b3]
+  "
           >
             <Plus className="mr-2 h-4 w-4" /> Add Expense
-          </Button>
+          </button>
         </div>
 
         {/* Expense Cards by Date */}
@@ -325,9 +533,10 @@ const handleAddExpense = () => {
               const total = list.reduce((s, e) => s + e.amount, 0);
               return (
                 <div key={date}>
-                  <h3 className="text-xl font-semibold mb-3 text-[#001e42]">
-                    {new Date(date).toDateString()} — {total.toFixed(2)}€
-                  </h3>
+                 <h3 className="text-xl font-semibold mb-3 text-[#001e42]">
+  {formatExpenseDate(date)} — {total.toFixed(2)}€
+</h3>
+
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {list.map((e, i) => {
                       const index = expenses.indexOf(e);
@@ -447,15 +656,7 @@ const handleAddExpense = () => {
           <option key={c}>{c}</option>
         ))}
       </select>
-      <label className="text-sm">Expense Date</label>
-      <Input
-        type="date"
-        value={newExpense.date}
-        onChange={(e) =>
-          setNewExpense({ ...newExpense, date: e.target.value })
-        }
-        className="rounded-xl"
-      />
+      
       <label className="text-sm">Description</label>
       <Input
         placeholder="Description"
@@ -475,6 +676,15 @@ const handleAddExpense = () => {
             ...newExpense,
             amount: Number(e.target.value) || 0,
           })
+        }
+        className="rounded-xl"
+      />
+      <label className="text-sm">Expense Date</label>
+      <Input
+        type="date"
+        value={newExpense.date}
+        onChange={(e) =>
+          setNewExpense({ ...newExpense, date: e.target.value })
         }
         className="rounded-xl"
       />
@@ -515,7 +725,17 @@ const handleAddExpense = () => {
     <DialogFooter className="mt-5 flex justify-center">
       <Button
         onClick={handleAddExpense}
-        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+        className="
+    w-full
+    bg-[#001e42]
+    text-white
+    py-2.5
+    rounded-lg
+    font-medium
+    hover:bg-[#DCC9A3]
+    hover:text-[#001e42]
+    transition
+  "
       >
         Add Expense
       </Button>
@@ -548,15 +768,7 @@ const handleAddExpense = () => {
           ))}
       </select>
 
-<label className="text-sm">Expense Date</label>
-        <Input
-          type="date"
-          value={editingExpense.date}
-          onChange={(e) =>
-            setEditingExpense({ ...editingExpense, date: e.target.value })
-          }
-          className="rounded-xl"
-        />
+
 
         <label className="text-sm">Description</label>
         <Input
@@ -584,6 +796,17 @@ const handleAddExpense = () => {
           }
           className="rounded-xl"
         />
+
+        <label className="text-sm">Expense Date</label>
+        <Input
+          type="date"
+          value={editingExpense.date}
+          onChange={(e) =>
+            setEditingExpense({ ...editingExpense, date: e.target.value })
+          }
+          className="rounded-xl"
+        />
+        
         <label className="text-sm">City/Place</label>
                 <Input
           placeholder="City / Place"
@@ -644,8 +867,19 @@ const handleAddExpense = () => {
           );
           setExpenses(updated);
           setEditModalOpen(false);
+          saveSingleExpense(editingExpense);
         }}
-        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+        className="
+    w-full
+    bg-[#001e42]
+    text-white
+    py-2.5
+    rounded-lg
+    font-medium
+    hover:bg-[#DCC9A3]
+    hover:text-[#001e42]
+    transition
+  "
       >
         Save Changes
       </Button>
@@ -654,6 +888,7 @@ const handleAddExpense = () => {
 </Dialog>
 
         {/* Resumen por categoría */}
+        {/*
         <section className="bg-white p-6 rounded-2xl shadow-md text-center">
           <h2 className="text-xl font-bold mb-6">
             Summary by Category
@@ -688,9 +923,10 @@ const handleAddExpense = () => {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-               label={({ category, value }) =>
-  `${category}: €${Number(value || 0).toFixed(2)}`
+               label={({ payload, value }) =>
+  `${payload.category}: €${Number(value || 0).toFixed(2)}`
 }
+
               >
                 {categorySummary.map((_, i) => (
                   <Cell key={i} fill={colors[i % colors.length]} />
@@ -707,8 +943,9 @@ const handleAddExpense = () => {
             </PieChart>
           </div>
         </section>
-
+*/}
         {/* Resumen por Paid By */}
+        {/*
         <section className="bg-white p-6 rounded-2xl shadow-md text-center">
           <h2 className="text-xl font-bold mb-6">
             Summary by Paid By
@@ -742,9 +979,9 @@ const handleAddExpense = () => {
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label={({ paidBy, value }) => {
+                label={({ payload, value }) => {
   const val = Number(value) || 0;
-  return `${paidBy}: €${val.toFixed(2)}`;
+  return `${payload.paidBy}: €${val.toFixed(2)}`;
 }}
               >
                 {paidBySummary.map((_, i) => (
@@ -762,6 +999,7 @@ const handleAddExpense = () => {
             </PieChart>
           </div>
         </section>
+        */}
       </main>
       </SessionProvider>
     </>

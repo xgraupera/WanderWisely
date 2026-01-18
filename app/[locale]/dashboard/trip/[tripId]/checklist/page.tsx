@@ -28,6 +28,7 @@ export default function ChecklistPage() {
   const params = useParams();
   const tripIdParam = params?.tripId;
   const tripId = Array.isArray(tripIdParam) ? tripIdParam[0] : tripIdParam;
+const locale = params?.locale || "en"; // 🔹 fallback
 
   const [rows, setRows] = useState<ChecklistItem[]>([]);
   const [budgetCategories, setBudgetCategories] = useState<string[]>([]);
@@ -159,7 +160,7 @@ setBudgetCategories(cats);
   
       <><SessionProvider>
         <NavBar tripId={tripId} />
-        <main className="p-8 text-center pt-20">
+        <main className="p-8 text-center bg-gray-50  pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
         </SessionProvider>

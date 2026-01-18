@@ -6,6 +6,8 @@ import { useSession, signOut } from "next-auth/react";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useParams } from "next/navigation";
+import en from "@/i18n/en.json";
+import es from "@/i18n/es.json";
 
 interface NavBarProps {
   tripId?: string;
@@ -14,10 +16,14 @@ interface NavBarProps {
 export default function NavBar({ tripId }: NavBarProps) {
   const pathname = usePathname();
   const params = useParams();
-  const locale = params?.locale || "en";
+
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+      const segments = pathname?.split("/") || [];
+  const locale = segments[1] === "es" ? "es" : "en";
+  const t = locale === "es" ? es : en;
 
   function withLocale(path: string) {
     if (!path.startsWith("/")) path = "/" + path;
@@ -26,14 +32,19 @@ export default function NavBar({ tripId }: NavBarProps) {
 
   const tripLinks = tripId
     ? [
-        { href: withLocale(`/dashboard/trip/${tripId}/main`), label: "Main" },
-        { href: withLocale(`/dashboard/trip/${tripId}/budget`), label: "Budget" },
-        { href: withLocale(`/dashboard/trip/${tripId}/itinerary`), label: "Itinerary" },
-        { href: withLocale(`/dashboard/trip/${tripId}/reservations`), label: "Reservations" },
-        { href: withLocale(`/dashboard/trip/${tripId}/checklist`), label: "Checklist" },
-        { href: withLocale(`/dashboard/trip/${tripId}/expenses`), label: "Expenses" },
+        { href: withLocale(`/dashboard/trip/${tripId}/main`), label: t.main },
+        { href: withLocale(`/dashboard/trip/${tripId}/budget`), label: t.budget },
+
+         { href: withLocale(`/dashboard/trip/${tripId}/reservations`), label: t.reservations },
+
+         { href: withLocale(`/dashboard/trip/${tripId}/expenses`), label: t.expenses},
       ]
+               
     : [];
+    {/*
+        { href: withLocale(`/dashboard/trip/${tripId}/itinerary`), label: t.itinerary },
+        { href: withLocale(`/dashboard/trip/${tripId}/checklist`), label: t.checklist },
+         */}
 
   const dropdownItems = [
     ...tripLinks,
@@ -108,11 +119,11 @@ export default function NavBar({ tripId }: NavBarProps) {
               className="w-8 h-8 rounded-full bg-[#DCC9A3] text-[#001e42] font-bold flex items-center justify-center hover:brightness-90 transition"
               onClick={() => setProfileOpen(!profileOpen)}
             >
-              {session.user.email[0].toUpperCase()}
+              {(session.user.name?.[0] || session.user.email[0]).toUpperCase()}
             </button>
 
             {profileOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-[#001e42] text-white rounded-lg shadow-lg flex flex-col z-50">
+              <div className="absolute right-0 mt-4 w-44 bg-[#001e42] text-white rounded-lg shadow-lg flex flex-col z-50">
                 {dropdownItems.map((item, idx) => (
                   <DropdownItem key={idx} item={item} />
                 ))}
@@ -134,7 +145,7 @@ export default function NavBar({ tripId }: NavBarProps) {
             </button>
 
             {profileOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-[#001e42] text-white rounded-lg shadow-lg flex flex-col z-50">
+              <div className="absolute right-0 mt-4 w-44 bg-[#001e42] text-white rounded-lg shadow-lg flex flex-col z-50">
                 {dropdownItems.map((item, idx) => (
                   <DropdownItem key={idx} item={item} />
                 ))}
@@ -142,12 +153,14 @@ export default function NavBar({ tripId }: NavBarProps) {
             )}
           </div>
         )}
-
+{/*
         <button onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
+        */}
       </div>
 
+{/*
       {menuOpen && tripLinks.length > 0 && (
         <div className="absolute top-14 left-0 w-full bg-[#001e42] text-white p-4 flex flex-col gap-2 md:hidden z-50">
           {tripLinks.map((link) => (
@@ -164,6 +177,7 @@ export default function NavBar({ tripId }: NavBarProps) {
           ))}
         </div>
       )}
+         */}
     </nav>
   );
 }

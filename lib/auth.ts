@@ -23,23 +23,23 @@ declare module "next-auth" {
   }
 }
 
+// lib/auth.ts
 export async function verifyTripOwnership(tripId: number) {
   const session = await getServerSession(authOptions);
 
-  // Si no hay sesión o no hay user → 401
-  if (!session || !session.user || !session.user.id) {
-    return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+  if (!session?.user?.id) {
+    return { trip: null, session: null, error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
   }
-
-
 
   const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-  if (!trip) return { error: NextResponse.json({ error: "Trip not found" }, { status: 404 }) };
 
-  // Comprobamos que el trip pertenece al usuario logueado
-  if (trip.userId !== Number(session.user.id)) {
-    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  if (!trip) {
+    return { trip: null, session, error: NextResponse.json({ error: "Trip not found" }, { status: 404 }) };
   }
 
-  return { trip, session };
+  if (trip.userId !== Number(session.user.id)) {
+    return { trip: null, session, error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+
+  return { trip, session, error: null };
 }

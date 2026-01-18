@@ -1,6 +1,7 @@
 // ✅ app/api/checklist/route.ts
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { verifyTripOwnership } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
@@ -26,12 +27,14 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const tripId = Number(searchParams.get("tripId"));
+    const { trip, error } = await verifyTripOwnership(tripId);
+if (error) return error;
 
     if (!tripId || isNaN(tripId))
       return NextResponse.json({ error: "Missing or invalid tripId" }, { status: 400 });
 
     const checklist = await prisma.checklist.findMany({
-      where: { tripId },
+      where: { tripId: tripId },
       orderBy: { id: "asc" },
     });
 

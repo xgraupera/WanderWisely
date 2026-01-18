@@ -1,20 +1,31 @@
 // middleware.ts
 import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Configuración de rutas protegidas
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/trips/:path*",
-    "/profile/:path*",
-    "/settings/:path*",
+    "/(en|es)?/dashboard/:path*",
+    "/(en|es)?/trips/:path*",
+    "/(en|es)?/profile/:path*",
+    "/(en|es)?/settings/:path*",
   ],
 };
 
-// Exporta withAuth directamente como middleware
-export default withAuth({
-  // Opcional: página a la que redirigir si no está autenticado
-  pages: {
-    signIn: "/login",
+export default withAuth(
+  function middleware(req: NextRequest) {
+    return NextResponse.next();
   },
-});
+  {
+    callbacks: {
+      authorized: ({ token }) => {
+        // 🔐 Si hay token → acceso permitido
+        return !!token;
+      },
+    },
+    pages: {
+      // 🔁 Si NO hay sesión → landing
+      signIn: "/",
+    },
+  }
+);

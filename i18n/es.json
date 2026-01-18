@@ -1,16 +1,161 @@
 {
+  "title": "Tripilot | Planea mejor. Viaja libremente.",
+  "description": "Tripilot es tu copiloto financiero para viajes largos. Controla gastos, anticipa riesgos y evita sorpresas de presupuesto mientras viajas.",
+  "hero": {
+    "headline": "Tripilot",
+    "subheadline": "Tu copiloto financiero para viajes largos.",
+    "subheadline2": "Planea tu presupuesto, controla tus gastos y sabe antes de que sea demasiado tarde si tu viaje se está desviando.",
+    "subheadline3": "Evita sorpresas en el presupuesto. Sabe antes de que sea demasiado tarde si tu viaje se está desviando.",
+     "buttontitle": "Preparado para viajar sin estrés por el dinero?",
+    "cta": "Crea tu viaje"
+  },
+  "why": {
+    "title": "La mayoría de los viajes no fracasan por planificación. Fracasan por dinero.",
+    "cards": {
+      "budgeting": {
+        "title": "Presupuesto Inteligente",
+        "desc": "Controla tus gastos y planifica presupuestos sin esfuerzo."
+      },
+      "forecast": {
+        "title": "Pronóstico de Gastos",
+        "desc": "Ve si tu ritmo actual pone en riesgo el resto del viaje — antes de que sea demasiado tarde."
+      },
+      "warnings": {
+        "title": "Alertas Tempranas",
+        "desc": "Sabe qué categoría está rompiendo tu presupuesto — antes de arruinar tu viaje."
+      },
+      "itinerary": {
+        "title": "Itinerarios Organizados",
+        "desc": "Planifica tus días de viaje de forma clara, sin hojas de cálculo desordenadas."
+      }
+    }
+  },
+  "how": {
+    "title": "Cómo funciona Tripilot",
+    "steps": {
+      "one": {
+        "title": "1. Establece tu presupuesto de viaje",
+        "desc": "Define cuánto planeas gastar en cada categoría antes de viajar."
+      },
+      "two": {
+        "title": "2. Registra gastos",
+        "desc": "Controla tus gastos en segundos mientras viajas, sin hojas de cálculo."
+      },
+      "three": {
+        "title": "3. Mantente en camino",
+        "desc": "Tripilot te avisa temprano si tu ritmo de gasto romperá tu presupuesto — y cómo ajustarlo."
+      }
+    }
+  },
   "dashboard": "Tu Panel",
-  "subtitle": "Cada gran aventura comienza aquí. Crea un nuevo viaje o revisa tus viajes en curso.",
-  "createTrip": "Crear Nuevo Viaje",
   "yourTrips": "Tus Viajes",
-  "loadingTrips": "Cargando viajes...",
-  "noTrips": "¡Aún no has creado un viaje!",
-  "tripsMap": "Mapa de Viajes",
+  "noTrips": "¡Aún no has creado ningún viaje!",
+  "createTrip": "Crear Nuevo Viaje",
   "tripName": "Nombre del Viaje",
   "travelers": "Número de Viajeros",
   "startDate": "Fecha de Inicio",
   "endDate": "Fecha de Fin",
   "latitude": "Latitud (Opcional)",
   "longitude": "Longitud (Opcional)",
-  "creating": "Creando..."
+  "creating": "Creando...",
+  "deleteTripConfirm": "¿Seguro que deseas eliminar este viaje?",
+  "loadingTrips": "Cargando viajes...",
+  "weatherNotAvailable": "Clima no disponible",
+  "tripsMap": "Mapa de Viajes",
+  "errorCreatingTrip": "Error al crear el viaje",
+  "networkError": "Error de red al crear el viaje",
+  "endDateBeforeStart": "La fecha de fin no puede ser anterior a la fecha de inicio.",
+  "requiredFields": "Las fechas de inicio y fin son obligatorias.",
+  "main": "Principal",
+  "budget": "Presupuesto",
+  "itinerary": "Itinerario",
+  "reservations": "Reservas",
+  "checklist": "Checklist",
+  "expenses": "Gastos",
+  "profile": "Perfil",
+  "logout": "Cerrar sesión",
+  "about": "Acerca de",
+  "aboutUs": "Sobre nosotros",
+  "contact": "Contacto",
+  "privacyPolicy": "Política de privacidad",
+  "termsConditions": "Términos y condiciones",
+  "language": "Idioma",
+  "english": "Inglés",
+  "spanish": "Español",
+  "version": "Versión",
+  "aboutpage": {
+    "title": "🌍 Sobre Tripilot",
+    "p1": "Tripilot nació del amor por los viajes y la pasión por una planificación simple e inteligente. Creemos que cada viaje — ya sea al otro lado del mundo o dentro de tu país — merece estar bien organizado, ajustado al presupuesto y ser memorable por las razones correctas.",
+    "p2": "Nuestra misión es ayudar a los viajeros a planificar, controlar y disfrutar sus aventuras con confianza. Tripilot combina un diseño intuitivo con herramientas prácticas para gestionar presupuestos, listas, itinerarios y gastos compartidos.",
+    "p3": "Somos un pequeño equipo independiente de exploradores, diseñadores y desarrolladores que entendemos los retos de planificar viajes. Tripilot está hecho por viajeros, para viajeros.",
+    "footer": "Tu copiloto financiero para viajes largos. ✈️"
+  },
+  "contactpage": {
+    "title": "📬 Contacto",
+    "intro": "¡Nos encantaría saber de ti! Ya sea una pregunta, sugerencia o propuesta de colaboración, siempre estamos encantados de conectar con otros viajeros y creadores.",
+    "name": "Tu nombre",
+    "email": "Correo electrónico",
+    "message": "Mensaje",
+    "namePlaceholder": "Juan Viajero",
+    "emailPlaceholder": "tu@email.com",
+    "messagePlaceholder": "Escribe tu mensaje...",
+    "send": "Enviar mensaje",
+    "direct": "O escríbenos directamente a"
+  },
+   "categories": {
+    "flights": "Vuelos",
+    "accommodation": "Alojamiento",
+    "internal_transport": "Transporte interno",
+    "health": "Salud",
+    "documentation": "Documentación",
+    "activities": "Actividades",
+    "meals": "Comidas",
+    "technology_sim": "Tecnología / SIM",
+    "others": "Otros"
+  },
+  "budgetpage": {
+    "title": "💰 Planificación de Presupuesto",
+    "intro": "Viaja con libertad planificando con inteligencia. Define tu presupuesto por categoría y deja que Tripilot te ayude a mantenerte en el camino.",
+    "loading": "Cargando información del viaje...",
+    "totalBudget": "Presupuesto total",
+    "totalSpent": "Gasto total",
+    "overbudget": "Exceso de gasto",
+    "budgetLabel": "Presupuesto (€)",
+    "spentLabel": "Gastado (€)",
+    "overbudgetLabel": "Exceso (€)",
+    "used": "usado",
+    "left": "restante",
+    "newCategoryPlaceholder": "Nombre de nueva categoría",
+    "addCategory": "+ Añadir categoría",
+    "save": "Guardar presupuesto",
+    "saving": "Guardando...",
+    "savedOk": "✅ Presupuesto guardado",
+    "savedError": "❌ Error al guardar el presupuesto",
+    "serverError": "❌ Error de red o servidor",
+    "cannotDelete": "⚠️ Esta categoría no se puede eliminar porque ya tiene gastos.",
+    "confirmDelete": "¿Seguro que quieres eliminar"
+  },
+
+  "checklistpage": {
+    "title": "🧾 Lista de viaje",
+    "intro": "No olvides nada. Crea tu lista, marca lo que ya está listo y viaja con la tranquilidad de tenerlo todo.",
+    "loading": "Cargando información del viaje...",
+    "addItem": "Añadir ítem",
+    "save": "Guardar checklist",
+    "saving": "Guardando...",
+    "savedOk": "✅ Checklist guardada",
+    "savedError": "❌ Error al guardar la checklist",
+    "networkError": "❌ Error de red o servidor",
+    "noTask": "Sin tarea",
+    "notes": "Notas",
+    "edit": "Editar ítem",
+    "deleteConfirm": "¿Seguro que quieres eliminar este elemento?",
+    "editTitle": "Editar ítem",
+    "addTitle": "Añadir nuevo ítem",
+    "task": "Tarea",
+    "notesPlaceholder": "Notas",
+    "taskPlaceholder": "Tarea",
+    "add": "Añadir",
+    "taskRequired": "Introduce un nombre para la tarea."
+  }
 }

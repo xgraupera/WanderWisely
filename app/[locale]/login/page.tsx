@@ -55,11 +55,12 @@ const locale = params?.locale || "en"; // fallback
       }
 
       if (mode === "recover") {
-        const res = await fetch("/api/recover", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
+  const res = await fetch("/api/recover", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, locale }), // ✅ pasamos el locale desde aquí
+  });
+
 
         const data = await res.json();
         if (!res.ok) {

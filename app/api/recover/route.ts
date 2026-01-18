@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+
+
+
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    const { email, locale } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     // ⚙️ Create a password reset link (here we just mock one)
-    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?email=${encodeURIComponent(email)}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/${locale}/reset-password?email=${encodeURIComponent(email)}`;
 
     // 📨 Transporter
     const transporter = nodemailer.createTransport({

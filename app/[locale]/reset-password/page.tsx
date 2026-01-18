@@ -6,11 +6,16 @@ import NavBar from "@/components/NavBar";
 import { SessionProvider } from "next-auth/react";
 
 
+
+
+
 function ResetPasswordForm() {
   const params = useSearchParams();
   const email = params.get("email");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
+
+  
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +58,7 @@ function ResetPasswordForm() {
 
   return (
     <SessionProvider>
-    <main className="p-8 space-y-10 bg-gray-50 pt-25">
+    <main className="p-8 space-y-10 bg-gray-50 pt-20">
     <div className="flex flex-col items-center justify-center bg-gray-50 px-4">
       <div className="bg-white shadow-md rounded-2xl p-8 w-full max-w-md">
         <h1 className="text-3xl font-bold mb-4 text-center">

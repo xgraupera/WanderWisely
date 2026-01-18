@@ -20,7 +20,8 @@ interface ReservationItem {
   type: string;
   provider: string;
   bookingDate: string;
-  date: string;
+startDate: string;
+endDate: string;
   cancellationDate?: string;
   amount: number;
   confirmed: boolean;
@@ -50,6 +51,7 @@ const formatDate = (isoString: string | null | undefined) => {
   return `${day}/${month}/${year}`;
 };
 
+ {/* S
 const predefinedCategories: { type: string; category: string }[] = [
   { type: "Flight 1", category: "Flights" },
   { type: "Hotel 1", category: "Accommodation" },
@@ -58,29 +60,34 @@ const predefinedCategories: { type: string; category: string }[] = [
   { type: "Insurance", category: "Health" },
   { type: "Visa", category: "Documentation" },
 ];
-
+ */}
 export default function ReservationsPage() {
+  const today = new Date().toISOString().split("T")[0];
   const params = useParams();
   const tripIdNum = Number(params?.tripId);
-
+const locale = params?.locale || "en"; // fallback
   const [rows, setRows] = useState<ReservationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [budgetCategories, setBudgetCategories] = useState<BudgetCategory[]>([]);
   const [showReservationForm, setShowReservationForm] = useState(false);
   const [reservationForm, setReservationForm] = useState<ReservationItem>({
-    type: "",
-    provider: "",
-    bookingDate: new Date().toISOString().split("T")[0],
-    date: "",
-    cancellationDate: "",
-    amount: 0,
-    confirmed: false,
-    link: "",
-    category: "",
-  });
+  id: undefined,
+  type: "",
+  provider: "",
+  bookingDate: today,
+  startDate: "",
+  endDate: "",
+  cancellationDate: "",
+  amount: 0,
+  confirmed: false,
+  link: "",
+  category: "",
+});
+
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>({
+
     date: new Date().toISOString().split("T")[0],
     category: "",
     description: "",
@@ -93,7 +100,7 @@ export default function ReservationsPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
 
 const [userId, setUserId] = useState<string>("");
-  const today = new Date().toISOString().split("T")[0];
+  
 
   /** Cargar reservas y categorías */
   useEffect(() => {
@@ -120,32 +127,46 @@ const [userId, setUserId] = useState<string>("");
             reservations.map((r: any) => ({
               ...r,
               bookingDate: r.bookingDate ? new Date(r.bookingDate).toISOString().split("T")[0] : today,
-              date: r.date ? new Date(r.date).toISOString().split("T")[0] : "",
+              startDate: r.startDate
+  ? new Date(r.startDate).toISOString().split("T")[0]
+  : "",
+endDate: r.endDate
+  ? new Date(r.endDate).toISOString().split("T")[0]
+  : "",
               cancellationDate: r.cancellationDate ? new Date(r.cancellationDate).toISOString().split("T")[0] : "",
-              category: r.category || predefinedCategories.find(pc => pc.type === r.type)?.category || "Others",
+              
+              category: r.category || "Others",
               type: r.type || "Unknown",
               amount: r.amount || 0,
               confirmed: r.confirmed || false,
               expanded: false,
+              isPredefined: false,
             }))
           );
-        } else {
+        } 
+        {/*
+              category: r.category || predefinedCategories.find(pc => pc.type === r.type)?.category || "Others",
+              */}
+         {/* 
+        else {
          setRows(
   predefinedCategories.map((pc, index) => ({
     id: `temp-${index}`, // 🔹 id temporal único
     type: pc.type,
     provider: "",
     bookingDate: today,
-    date: "",
+    startDate: "",
+    endDate: "",
     cancellationDate: "",
     amount: 0,
     confirmed: false,
     link: "",
     category: pc.category,
     expanded: false,
+    isPredefined: true,
   }))
 );
-        }
+        }   */}
       } catch (err) {
         console.error("Error loading reservations:", err);
       } finally {
@@ -155,48 +176,85 @@ const [userId, setUserId] = useState<string>("");
     fetchData();
   }, [tripIdNum]);
 
+const saveReservationsAuto = async (updatedRows: ReservationItem[]) => {
+  try {
+    const cleaned = updatedRows
+  .filter(r => typeof r.id === "number") // 🔥 NO enviar predefinidas
+  .map(r => ({
+    id: r.id,
+    tripId: tripIdNum,
+    type: r.type,
+    category: r.category,
+    provider: r.provider || "",
+    bookingDate: r.bookingDate ? new Date(r.bookingDate).toISOString() : null,
+    startDate: r.startDate ? new Date(r.startDate).toISOString() : null,
+    endDate: r.endDate ? new Date(r.endDate).toISOString() : null,
+    cancellationDate: r.cancellationDate ? new Date(r.cancellationDate).toISOString() : null,
+    amount: Number(r.amount) || 0,
+    confirmed: r.confirmed || false,
+    link: r.link || "",
+  }));
+
+
+    const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tripId: tripIdNum, reservations: cleaned, userEmail: userId }),
+    });
+    const data = await res.json();
+
+    
+  } catch (err) {
+    console.error("Error auto-saving reservations:", err);
+  }
+  
+};
+
+
+
+
   /** Guardar todas las reservas */
-  const saveReservations = async () => {
-    setSaving(true);
-    try {
-      const cleaned = rows.map(r => ({
-        ...(typeof r.id === "number" ? { id: r.id } : {}),
+const saveReservations = async () => {
+  setSaving(true);
+  try {
+    const cleaned = rows
+      .filter(r => typeof r.id === "number") // 🔥 solo reales
+      .map(r => ({
+        id: r.id,
         tripId: tripIdNum,
-        type: r.type || "Unknown",
-        category: r.category || "Others",
+        type: r.type,
+        category: r.category,
         provider: r.provider || "",
         bookingDate: r.bookingDate ? new Date(r.bookingDate).toISOString() : null,
-        date: r.date ? new Date(r.date).toISOString() : null,
+        startDate: r.startDate ? new Date(r.startDate).toISOString() : null,
+        endDate: r.endDate ? new Date(r.endDate).toISOString() : null,
         cancellationDate: r.cancellationDate ? new Date(r.cancellationDate).toISOString() : null,
         amount: Number(r.amount) || 0,
         confirmed: r.confirmed || false,
         link: r.link || "",
       }));
 
-const res = await fetch("/api/reservations", { // 🔹 sin /save
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ tripId: tripIdNum, reservations: cleaned, userEmail: userId}),
-});
+    const res = await fetch("/api/reservations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tripId: tripIdNum,
+        reservations: cleaned,
+      }),
+    });
 
-const response = await res.json();
+    if (!res.ok) throw new Error("Save failed");
 
-      if (res.ok) {
-      alert("✅ Reservations saved!");
+    const data = await res.json();
 
-      // 🔹 mover esto DENTRO del try
-      if (response.reservations) {
-        setRows(
-          response.reservations.map((r: ReservationItem) => ({
-            ...r,
-            expanded: false
-          }))
-        );
-      }
+    setRows(prev =>
+      prev.map(r => {
+        const saved = data.reservations.find((s: any) => s.id === r.id);
+        return saved ? { ...saved, expanded: r.expanded } : r;
+      })
+    );
 
-    } else {
-      alert("❌ Error saving reservations");
-    }
+    alert("✅ Reservations saved!");
   } catch (err) {
     console.error(err);
     alert("❌ Server error");
@@ -207,11 +265,12 @@ const response = await res.json();
 
 
 
+
   /** Abrir modal de Expense */
   const openExpenseForm = (reservation: ReservationItem) => {
     setCurrentReservation(reservation);
     setExpenseForm({
-      date: reservation.bookingDate || today,
+      date: reservation.startDate || today,
       category: reservation.category,
       description: reservation.provider || reservation.type,
       place: reservation.link || "",
@@ -256,47 +315,72 @@ const res = await fetch("/api/expenses", {
     setReservationForm({ ...reservation });
   } else {
     setReservationForm({
-      id: undefined,
-      type: "",
-      provider: "",
-      bookingDate: today,
-      date: "",
-      cancellationDate: "",
-      amount: 0,
-      confirmed: false,
-      link: "",
-      category: budgetCategories[0]?.category || "Others",
-    });
+  id: undefined,
+  type: "",
+  provider: "",
+  bookingDate: today,
+  startDate: "",
+  endDate: "",
+  cancellationDate: "",
+  amount: 0,
+  confirmed: false,
+  link: "",
+  category: budgetCategories[0]?.category || "Others", // default
+});
+
   }
   setShowReservationForm(true);
 };
 
 
   /** Submit Reservation */
-const submitReservation = () => {
+const submitReservation = async () => {
   if (!reservationForm.type) return alert("Description is required");
 
-  setRows((prev) => {
-    // 🔹 Si ya existe una reserva con ese id → actualizar
-    const existingIndex = prev.findIndex((r) => r.id === reservationForm.id);
+  // EDIT
+  if (typeof reservationForm.id === "number") {
+    const res = await fetch("/api/reservations", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...reservationForm,
+        tripId: tripIdNum,
+      }),
+    });
 
-    if (existingIndex !== -1) {
-      const updated = [...prev];
-      updated[existingIndex] = { ...reservationForm };
-      return updated;
-    }
+    const updated = await res.json();
 
-    // 🔹 Si no tiene id → crear nueva reserva
-    const newReservation = {
-      ...reservationForm,
-      id: `temp-${Date.now()}`, // id temporal único
-      expanded: false,
-    };
-    return [...prev, newReservation];
+    setRows(prev =>
+      prev.map(r => (r.id === updated.id ? { ...updated, expanded: false } : r))
+    );
+
+  // CREATE
+} else {
+  const res = await fetch("/api/reservations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tripId: tripIdNum,
+      reservation: reservationForm, // 🔹 objeto, NO array
+    }),
   });
+
+  if (!res.ok) {
+    alert("Error creating reservation");
+    return;
+  }
+
+  const created = await res.json();
+
+  setRows(prev => [...prev, { ...created, expanded: false }]);
+}
+
 
   setShowReservationForm(false);
 };
+
+
+
 
 
   if (loading)
@@ -304,7 +388,7 @@ const submitReservation = () => {
       <>
       <SessionProvider>
        <NavBar tripId={String(tripIdNum)} />
-        <main className="p-8 text-center pt-20">
+        <main className="p-8 text-center bg-gray-50 pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
         </SessionProvider>
@@ -337,12 +421,25 @@ const submitReservation = () => {
         </div>
 
         <div className="flex justify-center">
-          <Button
+          <button
             onClick={()=>openReservationForm()} 
-            className="bg-[#001e42] text-white hover:bg-[#DCC9A3] transition"
+            className="
+    bg-[#001e42] 
+    text-white 
+    px-10 py-4 
+    rounded-xl 
+   
+    leading-none 
+    inline-flex items-center justify-center
+    hover:bg-[#DCC9A3] 
+    transition 
+    shadow-lg 
+    hover:scale-105 
+    hover:bg-[#e6d6b3]
+  "
           >
             <Plus className="mr-2 h-4 w-4" /> Add Reservation
-          </Button>
+          </button>
         </div>
 
         {/* Reservas */}
@@ -358,23 +455,34 @@ const submitReservation = () => {
                   return (
                     <div key={globalIndex} className="bg-white p-5 rounded-xl shadow-md transition hover:shadow-lg relative">
                       <div className="flex items-center gap-4">
-                        <input type="checkbox" className="w-5 h-5 accent-[#025fd1]" checked={r.confirmed} onChange={e => {
-                          const checked = e.target.checked;
-                          setRows(prev => prev.map((x,j) => j===globalIndex ? {...x, confirmed:checked}:x));
-                          if (checked) {
-  setTimeout(() => openExpenseForm(r), 100);
-}
-                          
-                        }}/>
+                        <input
+  type="checkbox"
+  className="w-5 h-5 accent-[#025fd1]"
+  checked={r.confirmed}
+  onChange={e => {
+    const checked = e.target.checked;
+    setRows(prev => {
+      const updated = prev.map((x,j) => j===globalIndex ? {...x, confirmed:checked}:x);
+      saveReservationsAuto(updated); // 🟢 guardar automáticamente
+      return updated;
+    });
+
+    if (checked) setTimeout(() => openExpenseForm(r), 100);
+  }}
+/>
+
                         <div className="flex flex-col gap-1">
                           <p className="font-bold text-lg">{r.type}</p>
                           <p>Amount: {r.amount || 0}€</p>
-                          <p>Booking Date: {formatDate(r.bookingDate) || "-"} | Reservation Date: {formatDate(r.date) || "-"} | Cancellation Deadline: {formatDate(r.cancellationDate) || "-"}</p>
+                          <p>From: {formatDate(r.startDate) || "-"} → To: {formatDate(r.endDate) || "-"}</p>
                         </div>
                         <button
                           onClick={async () => {
   if (window.confirm("Are you sure you want to delete this reservation?")) {
     const r = rows[globalIndex];
+    const updated = rows.filter((_, j) => j !== globalIndex);
+setRows(updated);
+saveReservationsAuto(updated); 
     setRows(prev => prev.filter((_, j) => j !== globalIndex));
     if (r.id) {
       await fetch("/api/reservations", {
@@ -437,14 +545,28 @@ const submitReservation = () => {
 
     {/* Modal para añadir/editar reserva */}
 <Dialog open={showReservationForm} onOpenChange={setShowReservationForm}>
-  <DialogContent className="sm:max-w-md rounded-2xl shadow-xl bg-white">
-    <DialogHeader className="text-center space-y-2">
-      <DialogTitle className="text-lg font-semibold text-[#001e42]">
+  <DialogContent
+  className="
+    w-[92vw]
+    max-w-md
+    max-h-[85vh]
+    overflow-y-auto
+    rounded-2xl
+    bg-white
+    p-6
+    shadow-xl
+  "
+>
+
+<DialogHeader className="text-center mb-4">
+  <DialogTitle className="text-xl font-bold text-[#001e42]">
+
+
         {reservationForm.id ? "Edit Reservation" : "Add Reservation"}
       </DialogTitle>
           </DialogHeader>
 
-    <div className="space-y-3 mt-2">
+    <div className="space-y-4">
       
       <select
         className="w-full border rounded-xl p-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#DCC9A3]"
@@ -470,51 +592,7 @@ const submitReservation = () => {
         }
       />
 
-      <label className="text-sm">Provider</label>
-      <Input
-        placeholder="Provider"
-        className="rounded-xl"
-        value={reservationForm.provider}
-        onChange={(e) =>
-          setReservationForm({ ...reservationForm, provider: e.target.value })
-        }
-      />
-
-      <label className="text-sm">Booking Date</label>
-      <Input
-        type="date"
-        className="rounded-xl"
-        value={reservationForm.bookingDate}
-        onChange={(e) =>
-          setReservationForm({ ...reservationForm, bookingDate: e.target.value })
-        }
-      />
-
-  
-
-      <label className="text-sm">Reservation Date</label>
-      <Input
-        type="date"
-        className="rounded-xl"
-        value={reservationForm.date}
-        onChange={(e) =>
-          setReservationForm({ ...reservationForm, date: e.target.value })
-        }
-      />
-
-    <label className="text-sm">Cancellation Deadline*</label>
-      <Input
-        type="date"
-        className="rounded-xl"
-        value={reservationForm.cancellationDate}
-        onChange={(e) =>
-          setReservationForm({
-            ...reservationForm,
-            cancellationDate: e.target.value,
-          })
-        }
-      />
-      <label className="text-sm">Amount (€)</label>
+<label className="text-sm">Amount (€)</label>
    <Input
   type="number"
   className="rounded-xl"
@@ -528,6 +606,65 @@ const submitReservation = () => {
   }
 />
 
+      <label className="text-sm">Booking Date</label>
+      <Input
+        type="date"
+        className="rounded-xl"
+        value={reservationForm.bookingDate}
+        onChange={(e) =>
+          setReservationForm({ ...reservationForm, bookingDate: e.target.value })
+        }
+      />
+
+  
+
+      <label className="text-sm">Start Date</label>
+<Input
+  type="date"
+  className="rounded-xl"
+  value={reservationForm.startDate}
+  onChange={(e) =>
+    setReservationForm({ ...reservationForm, startDate: e.target.value })
+  }
+/>
+
+<label className="text-sm">End Date</label>
+<Input
+  type="date"
+  className="rounded-xl"
+  value={reservationForm.endDate}
+  onChange={(e) =>
+    setReservationForm({ ...reservationForm, endDate: e.target.value })
+  }
+/>
+
+{/*
+    <label className="text-sm">Cancellation Deadline*</label>
+      <Input
+        type="date"
+        className="rounded-xl"
+        value={reservationForm.cancellationDate}
+        onChange={(e) =>
+          setReservationForm({
+            ...reservationForm,
+            cancellationDate: e.target.value,
+          })
+        }
+      />
+    */}   
+
+{/*
+      <label className="text-sm">Provider</label>
+      <Input
+        placeholder="Provider"
+        className="rounded-xl"
+        value={reservationForm.provider}
+        onChange={(e) =>
+          setReservationForm({ ...reservationForm, provider: e.target.value })
+        }
+      />
+ */}
+ {/*
       <label className="text-sm ">Booking Link</label>
       <Input
         placeholder="Link"
@@ -537,13 +674,27 @@ const submitReservation = () => {
           setReservationForm({ ...reservationForm, link: e.target.value })
         }
       />
+       */}
+       {/*
       <label className="text-sm flex items-center gap-2 text-sm text-gray-600 pt-1">* If the Cancellation Deadline attribute is not empty, a reminder email will be sent on the specified date.</label>
+    */}
     </div>
+     
 
     <DialogFooter className="mt-5 flex justify-center">
       <Button
         onClick={submitReservation}
-        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+        className="
+    w-full
+    bg-[#001e42]
+    text-white
+    py-2.5
+    rounded-lg
+    font-medium
+    hover:bg-[#DCC9A3]
+    hover:text-[#001e42]
+    transition
+  "
       >
         {reservationForm.id ? "Save Changes" : "Add Reservation"}
       </Button>
@@ -552,14 +703,27 @@ const submitReservation = () => {
   </DialogContent>
 </Dialog>
 <Dialog open={showExpenseForm} onOpenChange={setShowExpenseForm}>
-  <DialogContent className="sm:max-w-md rounded-2xl shadow-xl bg-white">
-    <DialogHeader className="text-center space-y-2">
-      <DialogTitle className="text-lg font-semibold text-[#001e42]">
+  <DialogContent
+  className="
+    w-[92vw]
+    max-w-md
+    max-h-[85vh]
+    overflow-y-auto
+    rounded-2xl
+    bg-white
+    p-6
+    shadow-xl
+  "
+>
+
+  <DialogHeader className="text-center mb-4">
+  <DialogTitle className="text-xl font-bold text-[#001e42]">
+
         Add New Expense
       </DialogTitle>
     </DialogHeader>
 
-    <div className="space-y-3 mt-2">
+    <div className="space-y-4">
       <select
         className="w-full border rounded-xl p-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#DCC9A3]"
         value={expenseForm.category}
@@ -574,17 +738,7 @@ const submitReservation = () => {
         ))}
       </select>
 
-      <label className="text-sm">Expense Date</label>
-      <Input
-        type="date"
-        value={expenseForm.date}
-        onChange={(e) =>
-          setExpenseForm({ ...expenseForm, date: e.target.value })
-        }
-        className="rounded-xl"
-      />
-
-      <label className="text-sm">Description</label>
+  <label className="text-sm">Description</label>
       <Input
         placeholder="Description"
         value={expenseForm.description}
@@ -594,7 +748,7 @@ const submitReservation = () => {
         className="rounded-xl"
       />
 
-      <label className="text-sm">Amount (€)</label>
+  <label className="text-sm">Amount (€)</label>
       <Input
         type="number"
         placeholder="Amount (€)"
@@ -607,6 +761,19 @@ const submitReservation = () => {
         }
         className="rounded-xl"
       />
+
+      <label className="text-sm">Expense Date</label>
+      <Input
+        type="date"
+        value={expenseForm.date}
+        onChange={(e) =>
+          setExpenseForm({ ...expenseForm, date: e.target.value })
+        }
+        className="rounded-xl"
+      />
+
+    
+
 
       <label className="text-sm">City/Place</label>
       <Input
@@ -647,7 +814,17 @@ const submitReservation = () => {
     <DialogFooter className="mt-5 flex justify-center">
       <Button
         onClick={submitExpense}
-        className="w-2/3 bg-[#001e42] text-white font-medium hover:bg-[#DCC9A3] hover:text-[#001e42] transition rounded-xl py-2"
+        className="
+    w-full
+    bg-[#001e42]
+    text-white
+    py-2.5
+    rounded-lg
+    font-medium
+    hover:bg-[#DCC9A3]
+    hover:text-[#001e42]
+    transition
+  "
       >
         Add Expense
       </Button>

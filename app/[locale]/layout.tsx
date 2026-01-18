@@ -28,9 +28,16 @@ export default async function LocaleLayout({
 
  return (
     <html lang={locale}>
-      <body className={`${poppins.className} bg-[#F9F8F4] text-[#001e42] font-sans`}>
+      <body className={`${poppins.className} flex flex-col min-h-screen bg-[#001e42] text-[#001e42] font-sans`}>
+        <main className="flex-1 pt-0 bg-grey-50
+      pt-[env(safe-area-inset-top)]
+      pb-[env(safe-area-inset-bottom)]
+      pb-20
+    ">
+      
+      {children}
+    </main>
         
-        {children}
         <FooterBar />
         <SpeedInsights />
       </body>

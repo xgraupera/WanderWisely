@@ -46,7 +46,7 @@ export default function ItineraryPage() {
   const [saving, setSaving] = useState(false);
   const [editDay, setEditDay] = useState<ItineraryItem | null>(null);
 const [showEditModal, setShowEditModal] = useState(false);
-
+const locale = params?.locale || "en"; // 🔹 fallback
 
 const openEditDayModal = (day: ItineraryItem) => {
   setEditDay(day);
@@ -78,6 +78,20 @@ const openEditDayModal = (day: ItineraryItem) => {
     };
     fetchItinerary();
   }, [tripId]);
+
+  const formatItineraryDate = (dateStr: string, dayNum: number) => {
+  if (!dateStr) return `Day ${dayNum}`;
+  const d = new Date(dateStr);
+  const localeCode = locale === "es" ? "es-ES" : "en-GB";
+  const formattedDate = d.toLocaleDateString(localeCode, {
+    weekday: "short", // Wed
+    day: "2-digit",   // 17
+    month: "2-digit", // 01
+    year: "numeric"   // 2026
+  });
+  return `${formattedDate} — Day ${dayNum}`;
+};
+
 
   // ➕ Añadir un nuevo día
   const addDay = () => {
@@ -157,7 +171,7 @@ const deleteDay = (index: number) => {
       <>
       <SessionProvider>
         <NavBar tripId={tripId} />
-        <main className="p-8 text-center pt-20">
+        <main className="p-8 text-center bg-gray-50 pt-20">
           <p className="text-lg text-gray-600">Loading trip information...</p>
         </main>
         </SessionProvider>
@@ -184,7 +198,7 @@ const deleteDay = (index: number) => {
                   
                 </div>
                 <div>
-                  <p className="font-bold text-lg">Day {d.day} - {formatDate(d.date) || "No Date"}</p>
+                  <p className="font-bold text-lg">{formatItineraryDate(d.date, d.day)}</p>
                   <p>City/Place: {d.city || "-"}</p>
                   <p>Activity: {d.activity || "-"}</p>
                 </div>

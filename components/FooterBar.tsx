@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname, useParams } from "next/navigation";
+import en from "@/i18n/en.json";
+import es from "@/i18n/es.json";
 
 interface FooterBarProps {
   tripId?: string;
@@ -9,13 +11,17 @@ interface FooterBarProps {
 
 export default function FooterBar({ tripId }: FooterBarProps) {
   const params = useParams();
-  const locale = params?.locale || "en";
+
   const pathname = usePathname();
   const router = useRouter();
 
   const [trips, setTrips] = useState<any[]>([]);
   const [openTripId, setOpenTripId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+
+    const segments = pathname?.split("/") || [];
+  const locale = segments[1] === "es" ? "es" : "en";
+  const t = locale === "es" ? es : en;
 
   function withLocale(path: string) {
     if (!path.startsWith("/")) path = "/" + path;
@@ -49,26 +55,29 @@ export default function FooterBar({ tripId }: FooterBarProps) {
   }
 
   const tripSections = (id: number) => [
-    { href: `/dashboard/trip/${id}/main`, label: "Main" },
-    { href: `/dashboard/trip/${id}/budget`, label: "Budget" },
-    { href: `/dashboard/trip/${id}/itinerary`, label: "Itinerary" },
-    { href: `/dashboard/trip/${id}/reservations`, label: "Reservations" },
-    { href: `/dashboard/trip/${id}/checklist`, label: "Checklist" },
-    { href: `/dashboard/trip/${id}/expenses`, label: "Expenses" },
+    { href: `/dashboard/trip/${id}/main`, label: t.main },
+    { href: `/dashboard/trip/${id}/budget`, label: t.budget },
+    
+    { href: `/dashboard/trip/${id}/reservations`, label: t.reservations },
+  
+    { href: `/dashboard/trip/${id}/expenses`, label: t.expenses },
   ];
-
+{/*
+  { href: `/dashboard/trip/${id}/itinerary`, label: t.itinerary },
+  { href: `/dashboard/trip/${id}/checklist`, label: t.checklist },
+*/}
   return (
     <footer className="bg-[#001e42] text-white py-10 px-6 mt-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
         {/* Branding */}
         <div>
-          <p className="text-lg font-semibold">Tripilot</p>
-          <p className="text-sm mt-2">Your financial copilot for longer trips.</p>
+          <p className="text-lg font-semibold">{t.hero.headline}</p>
+          <p className="text-sm mt-2">{t.hero.subheadline}</p>
           <p className="text-xs text-gray-400 mt-2 max-w-xs">
-            Avoid budget surprises. Know early if your trip is going off track.
+            {t.hero.subheadline3}
           </p>
            <div className="mt-4 flex flex-col items-start gap-2">
-  <label className="text-sm font-medium block w-full">Language:</label>
+  <label className="text-sm font-medium block w-full">{t.language}:</label>
   <select
     value={currentLocale}
     onChange={(e) => changeLanguage(e.target.value as "en" | "es")}
@@ -83,22 +92,22 @@ export default function FooterBar({ tripId }: FooterBarProps) {
 
         {/* Quick links */}
         <div>
-          <h3 className="font-semibold text-lg mb-3">About</h3>
+          <h3 className="font-semibold text-lg mb-3">{t.about}</h3>
           <ul className="space-y-2 text-sm">
-            <li><Link href={withLocale("/about")}>About Us</Link></li>
-            <li><Link href={withLocale("/contact")}>Contact</Link></li>
-            <li><Link href={withLocale("/privacy")}>Privacy Policy</Link></li>
-            <li><Link href={withLocale("/terms")}>Terms & Conditions</Link></li>
+            <li><Link href={withLocale("/about")}>{t.aboutUs}</Link></li>
+            <li><Link href={withLocale("/contact")}>{t.contact}</Link></li>
+            <li><Link href={withLocale("/privacy")}>{t.privacyPolicy}</Link></li>
+            <li><Link href={withLocale("/terms")}>{t.termsConditions}</Link></li>
           </ul>
         </div>
 
         {/* Trips */}
         <div>
-          <h3 className="font-semibold text-lg mb-3">Your trips</h3>
+          <h3 className="font-semibold text-lg mb-3">{t.yourTrips}</h3>
           {loading ? (
-            <p className="text-gray-300 text-sm">Loading trips...</p>
+            <p className="text-gray-300 text-sm">{t.loadingTrips}</p>
           ) : trips.length === 0 ? (
-            <p className="text-gray-300 text-sm">You have not created a trip yet!</p>
+            <p className="text-gray-300 text-sm">{t.noTrips}</p>
           ) : (
             <ul className="space-y-2 text-sm">
               {trips.map((trip) => (

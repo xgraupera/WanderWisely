@@ -15,12 +15,10 @@ import en from "@/i18n/en.json";
 import es from "@/i18n/es.json";
 import { SessionProvider } from "next-auth/react";
 
-
-
-const MapComponent = dynamic(() => import("@/components/MapComponent"), {
-  ssr: false,
-});
-
+const MapComponent = dynamic(
+  () => import("@/components/MapComponent"),
+  { ssr: false }
+);
 
 
 
@@ -220,12 +218,25 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
           Create a new trip or revisit your ongoing journeys.
         </p>
         <div className="text-center">
-  <Button
-    onClick={() => setModalOpen(true)}
-    className="bg-[#001e42] text-white px-6 py-2 rounded-lg hover:bg-[#DCC9A3] transition"
-  >
-    Create New Trip
-  </Button>
+ <button 
+  onClick={() => setModalOpen(true)}
+  className="
+    bg-[#001e42] 
+    text-white 
+    px-10 py-4 
+    rounded-xl 
+    leading-none 
+    inline-flex items-center justify-center
+    hover:bg-[#DCC9A3] 
+    transition 
+    shadow-lg 
+    hover:scale-105 
+    hover:bg-[#e6d6b3]
+  "
+>
+  Create New Trip
+</button>
+
 </div>
 
         {/* Lista de viajes */}
@@ -245,6 +256,7 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
 
     let shadowColor = "";
 
+     {/* De momento no pongo la sobra de colores
   if (today >= start && today <= end) {
     shadowColor = "shadow-[0_0_10px_rgba(134,239,172,0.4)]"; // Ongoing
   } else if (today < start) {
@@ -252,6 +264,8 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
   } else {
     shadowColor = "shadow-md"; // Completed. Para color rojo: "shadow-[0_0_10px_rgba(248,113,113,0.3)]"
   }
+ */}
+  shadowColor = "shadow-md";
 
   return (
     <div
@@ -324,9 +338,13 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
 
   
 
-  <div className="w-full h-[400px] rounded-xl overflow-hidden shadow-md relative z-0">
-    <MapComponent trips={trips} />
-  </div>
+
+<section className="w-full h-[400px] rounded-xl overflow-hidden shadow">
+  <MapComponent trips={trips} />
+</section>
+
+
+
 
 </section>
 
