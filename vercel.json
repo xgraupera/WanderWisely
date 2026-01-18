@@ -1,4 +1,8 @@
 {
+  "build": {
+    "command": "next build",
+    "disableTurbopack": true
+  },
   "crons": [
     {
       "path": "/api/reminders/send",
