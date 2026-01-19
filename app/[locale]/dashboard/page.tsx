@@ -6,8 +6,6 @@ import NavBar from "@/components/NavBar";
 import FooterBar from "@/components/FooterBar";
 import dynamic from "next/dynamic";
 /* import "leaflet/dist/leaflet.css"; */
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // Ajusta la ruta según tu proyecto
 import { Button } from "@/components/ui/button"; // Si ya usas un Button personalizado
 import { useParams } from "next/navigation";
@@ -23,8 +21,8 @@ const MapComponent = dynamic(
  */
 
 export default function DashboardPage() {
-  const params = useParams();
-  const locale = params?.locale || "en"; // fallback
+const params = useParams<{ locale: string }>();
+const locale = params?.locale ?? "en";// fallback
   const [trips, setTrips] = useState<any[]>([]);
   const [form, setForm] = useState({
     name: "",
@@ -254,7 +252,7 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
   const start = new Date(trip.startDate);
   const end = new Date(trip.endDate);
 
-    let shadowColor = "";
+   {/*  let shadowColor = "";*/}
 
      {/* De momento no pongo la sobra de colores
   if (today >= start && today <= end) {
@@ -265,7 +263,7 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
     shadowColor = "shadow-md"; // Completed. Para color rojo: "shadow-[0_0_10px_rgba(248,113,113,0.3)]"
   }
  */}
-  shadowColor = "shadow-md";
+  const shadowColor = "shadow-md";
 
   return (
     <div
@@ -418,34 +416,32 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
         </div>
 <div className="flex gap-4 sm:col-span-2">
         {/* Start Date */}
-        <div className="flex flex-col">
+        <div className=" flex-col">
           <label className="mb-1">Start Date</label>
-          <DatePicker
-            required
-            selected={form.startDate ? new Date(form.startDate) : null}
-            onChange={(date: Date | null) => {
-              if (date) setForm({ ...form, startDate: date.toISOString().split("T")[0] });
-              else setForm({ ...form, startDate: "" });
-            }}
-            className="border p-2 border-gray-200 rounded-lg w-full"
-            dateFormat="dd-MM-yyyy"
-          />
+          <input
+  type="date"
+  required
+  value={form.startDate}
+  onChange={(e) =>
+    setForm({ ...form, startDate: e.target.value })
+  }
+  className="border p-2 border-gray-200 rounded-lg w-full"
+/>
         </div>
 
         {/* End Date */}
-        <div className="flex flex-col">
+        <div className=" flex-col">
           <label className="mb-1">End Date</label>
-          <DatePicker
-            required
-            selected={form.endDate ? new Date(form.endDate) : null}
-            onChange={(date: Date | null) => {
-              if (date) setForm({ ...form, endDate: date.toISOString().split("T")[0] });
-              else setForm({ ...form, endDate: "" });
-            }}
-            className="border p-2 border-gray-200 rounded-lg w-full"
-            dateFormat="dd-MM-yyyy"
-            minDate={form.startDate ? new Date(form.startDate) : undefined}
-          />
+          <input
+  type="date"
+  required
+  value={form.endDate}
+  min={form.startDate || undefined}
+  onChange={(e) =>
+    setForm({ ...form, endDate: e.target.value })
+  }
+  className="border p-2 border-gray-200 rounded-lg w-full"
+/>
         </div>
 </div>
 <div className="flex gap-4 sm:col-span-2">
