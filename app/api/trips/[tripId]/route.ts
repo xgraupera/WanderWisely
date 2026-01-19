@@ -55,15 +55,17 @@ export async function GET(
       where: { tripId: id },
       select: { budget: true },
     });
-    const totalBudget = budgets.reduce((sum, b) => sum + (b.budget || 0), 0);
+const totalBudget = budgets.reduce((sum: number, b: { budget?: number }) => sum + (b.budget || 0), 0);
 
     // 🔹 Calcular gastos totales
     const expenses = await prisma.expense.findMany({
       where: { tripId: id },
       select: { amountPerTraveler: true },
     });
-    const spentSoFar = expenses.reduce((sum, e) => sum + (e.amountPerTraveler || 0), 0);
-
+const spentSoFar = expenses.reduce(
+  (sum: number, e: { amountPerTraveler?: number }) => sum + (e.amountPerTraveler || 0),
+  0
+);
     return NextResponse.json({
       id: trip.id,
       name: trip.name,
@@ -134,18 +136,24 @@ export async function PUT(
         latitude: isNaN(latitude) ? null : latitude,
         longitude: isNaN(longitude) ? null : longitude,
         description,
-        cities: citiesData as unknown as Prisma.InputJsonValue,
+        cities: citiesData,
       },
     });
 
     const budgets = await prisma.budget.findMany({ where: { tripId: id }, select: { budget: true } });
-    const totalBudget = budgets.reduce((sum, b) => sum + (b.budget || 0), 0);
+const totalBudget = budgets.reduce(
+  (sum: number, b: { budget?: number }) => sum + (b.budget || 0),
+  0
+);
 
     const expenses = await prisma.expense.findMany({
       where: { tripId: id },
       select: { amountPerTraveler: true },
     });
-    const spentSoFar = expenses.reduce((sum, e) => sum + (e.amountPerTraveler || 0), 0);
+    const spentSoFar = expenses.reduce(
+  (sum: number, e: { amountPerTraveler?: number }) => sum + (e.amountPerTraveler || 0),
+  0
+);
 
     return NextResponse.json({
       message: "Trip updated successfully",

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import FooterBar from "@/components/FooterBar";
 import NavBar from "@/components/NavBar";
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { supportedLocales } from "@/i18n/locales";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -12,7 +13,7 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-export const supportedLocales = ["en", "es"];
+
 
 export default async function LocaleLayout({
   children,
