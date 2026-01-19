@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+
 import type { ReactNode } from "react";
 import FooterBar from "@/components/FooterBar";
 import NavBar from "@/components/NavBar";
@@ -28,7 +29,7 @@ export default async function LocaleLayout({
 
  return (
     <html lang={locale}>
-      <body className={`${poppins.className} flex flex-col min-h-screen bg-[#001e42] text-[#001e42] font-sans`}>
+      <body className={`${poppins.className} flex flex-col min-h-screen `}>
         <main className="flex-1 pt-0 bg-grey-50
       pt-[env(safe-area-inset-top)]
       pb-[env(safe-area-inset-bottom)]
