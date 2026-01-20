@@ -1,11 +1,11 @@
-// app/layout.tsx
-import './globals.css'; // ⚡ importa tu CSS global aquí
+import './globals.css';
 import type { ReactNode } from 'react';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html>
       <body>{children}</body>
     </html>
   );
 }
+
