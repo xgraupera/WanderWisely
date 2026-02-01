@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 
 import NextAuth, { NextAuthOptions } from "next-auth";
+import type { Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
@@ -33,7 +34,12 @@ export const authOptions: NextAuthOptions = {
         if (!isValid) {
           throw new Error("Invalid password");
         }
-        return { id: Number(user.id), email: user.email, name: user.name || "" };
+        return {
+  id: Number(user.id),
+  email: user.email,
+  name: user.name || "",
+  isPremium: user.isPremium, // 👈 CLAVE
+};
       }
     })
   ],
@@ -42,25 +48,44 @@ export const authOptions: NextAuthOptions = {
     maxAge: 60 * 60 * 24 * 30, // 30 dias en segundos
   updateAge: 60 * 60 * 24, // renueva cada 24h si hay actividad
   },
-  pages: {
-    signIn: "/"  // redirigir al login en tu home
+   cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
+  
   callbacks: {
   async jwt({ token, user }) {
     // Cuando el usuario hace login, guardamos su id en el JWT
     if (user) {
-      token.id = user.id; // 👈 guarda el id real en el JWT
+      token.id = Number(user.id);    // 👈 guarda el id real en el JWT
+      token.isPremium = user.isPremium; 
     }
     return token;
   },
 
   async session({ session, token }) {
-    // Hacemos que session.user.id esté disponible en runtime
-    if (session.user && token.id) {
-      session.user.id = token.id as number;
-    }
-    return session;
-  },
+  if (session.user) {
+    session.user.id = token.id as number;
+
+    (session.user as typeof session.user & {
+      isPremium: boolean;
+    }).isPremium = Boolean(token.isPremium);
+  }
+  return session;
+},
+
+
+
 },
   secret: process.env.NEXTAUTH_SECRET
 };

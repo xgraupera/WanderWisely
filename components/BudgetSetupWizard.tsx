@@ -35,7 +35,14 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
     EXTRA_CATEGORIES.map(c => ({ ...c, value: 0 }))
   );
 
-  // 🔹 Autocalcular total
+  function resetMainCategories() {
+    setMainCategories(MAIN_CATEGORIES.map(c => ({ ...c, value: 0 })));
+  }
+
+  function resetExtraCategories() {
+    setExtraCategories(EXTRA_CATEGORIES.map(c => ({ ...c, value: 0 })));
+  }
+
   useEffect(() => {
     const sum = [...mainCategories, ...extraCategories].reduce(
       (acc, c) => acc + (Number(c.value) || 0),
@@ -76,34 +83,61 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
       <div className="bg-white rounded-xl p-8 w-full max-w-xl space-y-6 animate-fadeIn">
 
-        {/* Progreso */}
         <p className="text-sm text-gray-400 text-center">
-          Step {step} of 4
+          Step {step} of 5
         </p>
 
-        {/* STEP 1 */}
+        {/* STEP 1 INTRO */}
         {step === 1 && (
           <>
-            <h2 className="text-2xl font-bold">Set up your trip budget 💰</h2>
-            <p className="text-gray-600">
-              This helps us give you accurate alerts and spending forecasts.
-              You can change everything later.
+            <h2 className="text-2xl font-bold text-center">💰 Welcome to Tripilot</h2>
+            <p className="text-gray-600 text-justify">
+              We’ll be your tip financial copilot to help you avoid overspending on the go.
             </p>
+
             <button
               className="w-full bg-[#001e42] text-white py-2.5 rounded-lg"
               onClick={() => setStep(2)}
             >
-              Start
+              Continue
             </button>
           </>
         )}
 
-        {/* STEP 2 – Main categories */}
+        {/* STEP 2 TUTORIAL */}
         {step === 2 && (
           <>
-            <h2 className="text-xl font-semibold">Budget by category</h2>
+            <h2 className="text-xl font-semibold text-center">🔮 How the Forecast works</h2>
+
+            <ul className="space-y-3 text-sm text-gray-600 text-justify">
+              <li><b>Budget Forecast</b> predicts your final trip cost based on your current spending pace.</li>
+              <li>• Add <b>Reservations</b> for prepaid costs. Check them as confirmed, when you pay the reservation so it becomes a real expense.</li>
+              <li>• Add <b>Expenses</b> during the trip for daily spending.</li>
+             
+            </ul>
+
+            <div className="bg-gray-50 p-4 rounded-lg text-sm">
+              <p className="font-medium mb-2 text-justify">Expenses Category Types:</p>
+              <p>• Fixed → prepaid before trip (flights, documentation...)</p>
+              <p>• Mixed → some prepaid + some daily (activities, transport...)</p>
+              <p>• Variable → only daily spending (meals...)</p>
+            </div>
+
+            <button
+              className="w-full bg-[#001e42] text-white py-2.5 rounded-lg"
+              onClick={() => setStep(3)}
+            >
+              Set Budgets
+            </button>
+          </>
+        )}
+
+        {/* STEP 3 MAIN CATEGORIES */}
+        {step === 3 && (
+          <>
+            <h2 className="text-xl font-semibold text-center">💰 Main Budget Categories</h2>
             <p className="text-gray-500 text-sm">
-              Roughly split your budget to get better insights and alerts.
+              Rough estimates are enough. You can edit them later.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -122,20 +156,21 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
               ))}
             </div>
 
-            <p className="text-sm text-gray-600">
-              Estimated total: <b>{total.toFixed(2)} €</b>
-            </p>
+            <p className="text-sm">Estimated trip Budget: <b>{total.toFixed(2)} €</b></p>
 
             <div className="flex gap-3">
               <button
-                className="flex-1 border border-gray-300 py-2.5 rounded-lg"
-                onClick={() => setStep(3)}
+                className="flex-1 border py-2.5 rounded-lg"
+                onClick={() => {
+                  resetMainCategories();
+                  setStep(4);
+                }}
               >
                 Skip
               </button>
               <button
                 className="flex-1 bg-[#001e42] text-white py-2.5 rounded-lg"
-                onClick={() => setStep(3)}
+                onClick={() => setStep(4)}
               >
                 Continue
               </button>
@@ -143,12 +178,12 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
           </>
         )}
 
-        {/* STEP 3 – Extra categories */}
-        {step === 3 && (
+        {/* STEP 4 EXTRA */}
+        {step === 4 && (
           <>
-            <h2 className="text-xl font-semibold">Extra categories (optional)</h2>
+            <h2 className="text-xl font-semibold text-center">💰 Extra categories (optional)</h2>
             <p className="text-gray-500 text-sm">
-              These are often forgotten, but they add up.
+              You can add or remove categories later.
             </p>
 
             <div className="grid grid-cols-2 gap-4">
@@ -167,20 +202,21 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
               ))}
             </div>
 
-            <p className="text-sm text-gray-600">
-              Estimated total: <b>{total.toFixed(2)} €</b>
-            </p>
+            <p className="text-sm">Estimated trip Budget: <b>{total.toFixed(2)} €</b></p>
 
             <div className="flex gap-3">
               <button
-                className="flex-1 border border-gray-300 py-2.5 rounded-lg"
-                onClick={() => setStep(4)}
+                className="flex-1 border py-2.5 rounded-lg"
+                onClick={() => {
+                  resetExtraCategories();
+                  setStep(5);
+                }}
               >
                 Skip
               </button>
               <button
                 className="flex-1 bg-[#001e42] text-white py-2.5 rounded-lg"
-                onClick={() => setStep(4)}
+                onClick={() => setStep(5)}
               >
                 Continue
               </button>
@@ -188,21 +224,24 @@ export default function BudgetSetupWizard({ tripId, onComplete }: Props) {
           </>
         )}
 
-        {/* STEP 4 – Finish */}
-        {step === 4 && (
+        {/* STEP 5 FINISH */}
+        {step === 5 && (
           <>
-            <h2 className="text-2xl font-bold">Your initial budget has been set</h2>
-            <p className="text-gray-600">
-              💡 Tip: Add planned costs in <b>Reservations</b> and real expenses
-              in <b>Expenses</b> to get accurate alerts.
+            <h2 className="text-2xl font-bold text-center">🎉 Budget ready </h2>
+            <p className="text-gray-600 text-sm space-y-2 text-justify">
+             
+              <span >💡 Tip: Add <b>Reservations</b> before and <b>Expenses</b> during the trip for more accurate forecasts.</span>
+              <br />
+              <p className="text-gray-600 text-sm space-y-2 text-justify">You can edit Budgets and Categories anytime.</p>
             </p>
+            
 
             <button
               disabled={saving}
-              className="w-full bg-[#001e42] text-white py-2.5 rounded-lg mt-4 disabled:opacity-60"
+              className="w-full bg-[#001e42] text-white py-2.5 rounded-lg mt-4"
               onClick={finish}
             >
-              {saving ? "Saving..." : "Finish setup"}
+              {saving ? "Saving..." : "Start Tracking"}
             </button>
           </>
         )}

@@ -27,7 +27,8 @@ const CATEGORY_TYPE_MAP: Record<string, "fixed" | "variable" | "mixed"> = {
   Meals: "variable",
 };
 
-// 🟢 GET budgets (lee presupuestos y gastos)
+
+// 🟢 GET budgets
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -35,13 +36,14 @@ export async function GET(req: Request) {
     if (!tripId)
       return NextResponse.json({ error: "Missing tripId" }, { status: 400 });
 
-const { trip, error } = await verifyTripOwnership(tripId);
-  if (error) return error; // Devuelve 401, 403 o 404 si corresponde
+   
 
-    // 🔹 Ver si ya existen budgets
+    const { trip, error } = await verifyTripOwnership(tripId);
+    if (error) return error;
+
+    // Budgets
     let budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
 
-    // 🟩 Si no hay ninguno, crear los de por defecto (solo la primera vez)
     if (budgets.length === 0) {
       await prisma.budget.createMany({
         data: defaultCategories.map((cat) => ({
@@ -51,34 +53,66 @@ const { trip, error } = await verifyTripOwnership(tripId);
           spent: 0,
           overbudget: 0,
           percentage: 0,
-          type: CATEGORY_TYPE_MAP[cat] ?? "mixed", // ✅ aquí
+          type: CATEGORY_TYPE_MAP[cat] ?? "mixed",
         })),
       });
       budgets = await prisma.budget.findMany({ where: { tripId: trip.id } });
     }
 
-    // 🔹 Calcular spent (desde Expenses)
+     const allReservations = await prisma.reservation.findMany({
+  where: { tripId: trip.id },
+});
+
+    // Expenses
     const expenses = await prisma.expense.groupBy({
       by: ["category"],
       where: { tripId: trip.id },
       _sum: { amount: true },
     });
 
-    // 🔹 Actualizar los campos derivados
-   const updated = budgets.map((b: typeof budgets[number]) => {
-const match = expenses.find((e: { category: string; _sum: { amount: number | null } }) => 
-    e.category === b.category
-  );
-  const spent = match?._sum.amount || 0;
-  const over = Math.max(0, spent - b.budget);
-  const percentage = b.budget ? (spent / b.budget) * 100 : 0;
-  return { ...b, spent, overbudget: over, percentage };
-})
+    // Reservations (NO confirmed = forecast)
+    const reservations = await prisma.reservation.groupBy({
+      by: ["category", "confirmed"],
+      where: { tripId: trip.id, category: { not: null } },
+      _sum: { amount: true },
+    });
+
+    const plannedReservationMap: Record<string, number> = {};
+
+    reservations.forEach((r) => {
+      if (!r.confirmed) {
+        plannedReservationMap[r.category!] =
+          (plannedReservationMap[r.category!] || 0) + (r._sum.amount ?? 0);
+      }
+    });
+
+    // Individual reservations for alerts
+    const reservationList = await prisma.reservation.findMany({
+      where: { tripId: trip.id },
+    });
+
+    const updated = budgets.map((b) => {
+      const match = expenses.find((e) => e.category === b.category);
+      const spent = match?._sum.amount || 0;
+      const planned = plannedReservationMap[b.category] ?? 0;
+      const over = Math.max(0, spent - b.budget);
+      const percentage = b.budget ? (spent / b.budget) * 100 : 0;
+
+      return {
+        ...b,
+        spent,
+        plannedReservations: planned,
+        percentage,
+        overbudget: over,
+        reservationList: allReservations.filter(r => r.category === b.category), // 👈 only for frontend logic, NOT stored in DB
+        
+      };
+    });
 
     return NextResponse.json(updated);
-  } catch (error: any) {
-    console.error("Error fetching budgets:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (e: any) {
+    console.error(e);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 

@@ -1,112 +1,277 @@
-export interface ForecastInput {
+// lib/forecast/budgetForecast.ts
+
+export type BudgetCategory = {
+  category: string;
+  budget: number;
+  spent: number;
+  planned: number; // confirmed reservations
+  reservations: any[]; // all reservations
+  type: "fixed" | "variable" | "mixed";
+};
+
+export type CategoryForecast = {
+  category: string;
+  budget: number;
+  spent: number;
+  planned: number;
+  fixedPart: number;
+  variablePart: number;
+  forecast: number;
+  overForecast: number;
+  alert: boolean;
+  dailyAllowance?: number; // ✅ NUEVO
+};
+
+export type BudgetForecastResult = {
+  categories: CategoryForecast[];
+  totalForecast: number;
+  totalBudget: number;
+  alerts: string[];
+};
+
+export function calculateForecast(params: {
+  budgets: BudgetCategory[];
   totalDays: number;
   daysElapsed: number;
-  budgets: {
-    category: string;
-    budget: number;
-    spent: number;
-    type: "fixed" | "variable" | "mixed";
-  }[];
-}
+}): BudgetForecastResult {
+  const { budgets, totalDays, daysElapsed } = params;
 
-export interface ForecastResult {
-  conservative: {
-    totalForecast: number;
-    risk: number;
-    alerts: string[];
-  };
-  expected: {
-    totalForecast: number;
-    alerts: string[];
-  };
-  optimistic: {
-    totalForecast: number;
-  };
-}
-
-export function calculateForecast(input: ForecastInput): ForecastResult {
-  const { totalDays, daysElapsed, budgets } = input;
-
-  const D_elapsed = Math.max(daysElapsed, 1);
-  const D_left = Math.max(totalDays - daysElapsed, 0);
-
-  const B_total = budgets.reduce((s, b) => s + b.budget, 0);
-  const BUFFER = B_total * 0.1;
-
-  let expectedTotal = 0;
-  let conservativeTotal = 0;
-  let optimisticTotal = 0;
-
+  const categories: CategoryForecast[] = [];
   const alerts: string[] = [];
 
-  budgets.forEach((b) => {
-    const B = b.budget;
-    const S = b.spent;
-    const B_left = B - S;
+  let totalForecast = 0;
+  let totalBudget = 0;
 
-    // ---------------- FIXED ----------------
-    if (b.type === "fixed") {
-      const forecast = Math.max(B, S);
+  const daysLeft = Math.max(totalDays - daysElapsed, 1);
 
-      expectedTotal += forecast;
-      conservativeTotal += forecast;
-      optimisticTotal += forecast;
+  for (const b of budgets) {
+    const budget = b.budget || 0;
+    const spent = b.spent || 0;
+    const planned = b.planned || 0;
+    const reservations = b.reservations || [];
 
-      if (S > B) {
-        alerts.push(`${b.category}: fixed budget exceeded`);
-      }
-      return;
-    }
+if (budget === 0) {
+  const fixedTotal = reservations.reduce((s, r) => s + r.amount, 0);
 
-    // -------- VARIABLE & MIXED (variable part) --------
-    const burnRate = S / D_elapsed;
-
-    // EXPECTED
-    const expected = S + burnRate * D_left;
-
-    // CONSERVATIVE (+15%)
-    const conservative = S + burnRate * D_left * 1.15;
-
-    // OPTIMISTIC (adjusted burn rate)
-    const adjustedBurnRate = Math.min(
-      B_left / Math.max(D_left, 1),
-      burnRate
+  if (spent > 0 || fixedTotal > 0) {
+    alerts.push(
+      `${b.category} has expenses or reservations but no budget defined`
     );
-    const optimistic = S + adjustedBurnRate * D_left;
-
-    expectedTotal += expected;
-    conservativeTotal += conservative;
-    optimisticTotal += optimistic;
-
-    // Category alert (solo variable real)
-    if (burnRate > B / totalDays) {
-      alerts.push(
-        `${b.category}: reduce to ${adjustedBurnRate.toFixed(2)} €/day`
-      );
-    }
-  });
-
-  // -------- GLOBAL ALERTS --------
-  if (expectedTotal > B_total - BUFFER) {
-    alerts.push("Expected forecast exceeds safety buffer");
   }
 
-  if (conservativeTotal > B_total) {
-    alerts.push("Conservative forecast exceeds total budget");
+  categories.push({
+    category: b.category,
+    budget,
+    spent,
+    planned,
+    fixedPart: fixedTotal,
+    variablePart: 0,
+    forecast: spent + fixedTotal,
+    overForecast: spent + fixedTotal,
+    alert: spent + fixedTotal > 0,
+  });
+
+  totalForecast += spent + fixedTotal;
+  continue;
+}
+ 
+let dailyAllowance: number | undefined = undefined;
+
+    // =============================
+    // FIXED PART (all reservations)
+    // =============================
+    const fixedConfirmed = reservations
+      .filter((r) => r.confirmed)
+      .reduce((s, r) => s + r.amount, 0);
+
+    const fixedUnconfirmed = reservations
+      .filter((r) => !r.confirmed)
+      .reduce((s, r) => s + r.amount, 0);
+
+    const fixedPart = fixedConfirmed + fixedUnconfirmed;
+
+    // VARIABLE PART = rest of budget
+    const variablePart = Math.max(0, budget - fixedPart);
+
+    // =============================
+    // Forecast
+    // =============================
+    
+    // Default forecast = full budget (if no activity yet)
+let forecast = budget;
+
+// If there is any spending or reservations, calculate real forecast
+
+
+    const overForecast = Math.max(0, forecast - budget);
+    const alert = forecast > budget;
+
+    
+    totalBudget += budget;
+
+    // =============================
+    // ALERT: FIXED reservations exceed budget
+    // =============================
+    if (fixedPart > budget) {
+      alerts.push(
+        `Reservations exceed the ${b.category} budget by ${(fixedPart - budget).toFixed(2)} €`
+      );
+    }
+
+    // =============================
+    // FIXED CATEGORY LOGIC
+    // =============================
+    if (b.type === "fixed") {
+
+        if (spent > 0 || fixedUnconfirmed > 0 || fixedConfirmed > 0) {
+  forecast = spent + fixedUnconfirmed;
+}
+
+      if (alert) {
+        alerts.push(
+          `You must reduce ${b.category} costs by ${overForecast.toFixed(2)} € to meet the budget`
+        );
+      }
+
+   
+    }
+
+    // =============================
+    // VARIABLE CATEGORY LOGIC
+    // =============================
+    if (b.type === "variable") {
+      const remainingBudget = budget - spent;
+      const expectedDaily = budget / totalDays;
+      const currentDaily = spent / Math.max(daysElapsed, 1);
+
+      
+
+if (remainingBudget > 0) {
+  dailyAllowance = remainingBudget / daysLeft;
+}
+
+
+  if (spent > 0) {
+    const projected = (spent / Math.max(daysElapsed, 1)) * totalDays;
+    forecast = projected;
+  }
+
+
+const reduce = (remainingBudget) / daysLeft;
+
+      if (currentDaily > expectedDaily  && reduce > 0 ) {
+        
+        alerts.push(
+          `You must reduce ${b.category} spending by ${reduce.toFixed(2)} € per day`
+        );
+      }
+  if (reduce <= 0) {
+  alerts.push(
+    `${b.category}: variable spending exceeded budget by ${Math.abs(spent).toFixed(2)} €. Consider increasing the budget or reallocating from other categories`
+  );
+}
+      
+    }
+
+    // =============================
+    // MIXED CATEGORY LOGIC (REAL)
+    // =============================
+
+if (b.type === "mixed") {
+  const fixedConfirmed = (b.reservations || [])
+    .filter((r) => r.confirmed)
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+  const fixedUnconfirmed = (b.reservations || [])
+    .filter((r) => !r.confirmed)
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+  const fixedTotal = fixedConfirmed + fixedUnconfirmed;
+
+  // ✅ Gasto que pertenece a la parte variable
+  let variableSpent = spent;
+  // Si hay confirmed fixed, restamos solo lo que ya se gastó en fixed
+  if (fixedConfirmed > 0) variableSpent = Math.max(0, spent - fixedConfirmed);
+
+  const variableBudget = Math.max(0, budget - fixedTotal);
+  const variableRemaining = variableBudget - variableSpent;
+  const daysLeft = Math.max(totalDays - daysElapsed, 1);
+
+if (spent > 0) {
+    const projectedVariable = (spent / Math.max(daysElapsed, 1)) * totalDays;
+    forecast = fixedTotal + projectedVariable;
+  } else {
+    // no variable spending yet
+    forecast = fixedTotal;
+  }
+
+if (variableRemaining > 0) {
+  dailyAllowance = variableRemaining / daysLeft;
+}
+
+  if (fixedTotal > budget) {
+    alerts.push(
+      `${b.category}: fixed bookings exceed budget by ${(fixedTotal - budget).toFixed(2)} €`
+    );
+  }
+
+
+
+
+ const expectedDaily = variableBudget / totalDays;
+      const currentDaily = variableSpent / Math.max(daysElapsed, 1);
+
+
+  if (variableRemaining <= 0) {
+  // ❌ Te pasaste del presupuesto
+  alerts.push(
+    `${b.category}: variable spending exceeded budget by ${Math.abs(variableRemaining).toFixed(2)} €. Consider increasing the budget or reallocating from other categories`
+  );
+} 
+else if (variableRemaining > 0 && currentDaily > expectedDaily) {
+  // ⚠️ Vas demasiado rápido
+  const dailyAllowance = variableRemaining / daysLeft;
+  alerts.push(
+    `${b.category}: you can spend up to ${dailyAllowance.toFixed(2)} € per day`
+  );
+}
+
+
+  {/*
+    else if (variableRemaining > 0) {
+    // Solo mostrar daily allowance si queda presupuesto
+    const dailyAllowance = variableRemaining / daysLeft;
+    alerts.push(
+    `${b.category}: variable spending exceeded budget by ${Math.abs(variableRemaining).toFixed(2)} €`
+      `${b.category}: you can spend up to ${dailyAllowance.toFixed(2)} € per day`
+    );
+  }
+    */}
+}
+
+
+
+totalForecast += forecast;
+  
+
+    categories.push({
+      category: b.category,
+      budget,
+      spent,
+      planned,
+      fixedPart,
+      variablePart,
+      forecast,
+      overForecast,
+      alert,
+      dailyAllowance, // ✅
+    });
   }
 
   return {
-    conservative: {
-      totalForecast: Math.round(conservativeTotal),
-      risk: Math.round(conservativeTotal - B_total),
-      alerts,
-    },
-    expected: {
-      totalForecast: Math.round(expectedTotal),
-      alerts,
-    },
-    optimistic: {
-      totalForecast: Math.round(optimisticTotal),
-    },
+    categories,
+    totalForecast,
+    totalBudget,
+    alerts,
   };
 }

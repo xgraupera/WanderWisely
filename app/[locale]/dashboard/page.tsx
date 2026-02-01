@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import FooterBar from "@/components/FooterBar";
 import dynamic from "next/dynamic";
 /* import "leaflet/dist/leaflet.css"; */
+import TripsMap from "@/components/TripsMap";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"; // Ajusta la ruta según tu proyecto
 import { Button } from "@/components/ui/button"; // Si ya usas un Button personalizado
 import { useParams } from "next/navigation";
@@ -43,6 +44,7 @@ const locale = params?.locale ?? "en";// fallback
   const typingTimer = useRef<NodeJS.Timeout | null>(null);
 
 const t = locale === "es" ? es : en;
+
 
 
   // 🧭 Debounce estable
@@ -313,7 +315,7 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
 
       <button
         onClick={() => handleDelete(trip.id)}
-        className="absolute top-5.5 right-4 text-red-500 hover:text-red-700 transition opacity-80 group-hover:opacity-100"
+        className="absolute top-3 right-3.5 text-red-500 hover:text-red-700 transition opacity-80 group-hover:opacity-100"
         title="Delete trip"
       >
         ✕
@@ -342,6 +344,11 @@ async function fetchWeather(lat: number, lon: number, tripId: number) {
 </section>
 */}
 
+
+
+  
+
+  <TripsMap trips={trips} />
 
 
 </section>

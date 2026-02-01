@@ -74,9 +74,10 @@ const locale = params?.locale || "en"; // fallback
 
       if (mode === "login") {
         const result = await signIn("credentials", {
-          redirect: false,
+          
           email,
           password,
+          callbackUrl: withLocale("/dashboard"),
         });
 
         if (result?.error) {

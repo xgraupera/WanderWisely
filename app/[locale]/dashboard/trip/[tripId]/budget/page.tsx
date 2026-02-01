@@ -25,8 +25,8 @@ interface BudgetItem {
   category: string;
   budget: number;
   spent: number;
-  overbudget?: number;
-  percentage?: number;
+  plannedReservations?: number;
+  reservationList?: any[];
   type: "fixed" | "variable" | "mixed";
 }
 
@@ -98,16 +98,21 @@ const t = locale === "es" ? es : en;
   Meals: "variable",
 };
 
+
 const forecast = calculateForecast({
-  totalDays: 10,     // luego vendrá del trip
-  daysElapsed: 2,    // luego vendrá de fechas
+  totalDays: 10,
+  daysElapsed: 2,
   budgets: budget.map((b) => ({
     category: b.category,
     budget: b.budget,
     spent: b.spent,
+    planned: b.plannedReservations ?? 0,
+    reservations: b.reservationList ?? [], 
     type: b.type,
   })),
 });
+
+
 
 
 
@@ -244,6 +249,7 @@ const handleDeleteCategory = (index: number, spent: number, category: string) =>
 <BudgetForecastCard
   forecast={forecast}
   totalBudget={totalBudget}
+  tripId={tripIdNum}
 />
 
 
@@ -394,6 +400,15 @@ const handleDeleteCategory = (index: number, spent: number, category: string) =>
                     ></div>
                   </div>
                 </div>
+
+                {forecast.categories.find(c => c.category === item.category)?.dailyAllowance && (
+  <p className="text-xs text-blue-600 mt-2">
+    You can spend up to{" "}
+    {forecast.categories.find(c => c.category === item.category)?.dailyAllowance?.toFixed(2)} €
+    per day
+  </p>
+)}
+
               </div>
             );
           })}

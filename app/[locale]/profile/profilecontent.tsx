@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "@/types/hooks/useSession"; // tu hook
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import NavBar from "@/components/NavBar";
 import { useParams } from "next/navigation";
@@ -12,14 +13,38 @@ export default function ProfileContent() {
   const params = useParams();
   const locale = params?.locale || "en";
 
+  
   const [name, setName] = useState("");        // Nombre editable
   const [password1, setPassword1] = useState(""); // Contraseña nueva
   const [password2, setPassword2] = useState(""); // Confirmación
   const [changesMade, setChangesMade] = useState(false);
 
+
+  const goPremium = async () => {
+  const res = await fetch("/api/pay/subscription", { method: "POST" });
+
+if (!res.ok) {
+  console.error(await res.text());
+  alert("Subscription failed");
+  return;
+}
+
+const data = await res.json();
+
+if (!data.url) {
+  console.error(data);
+  alert("No checkout URL returned");
+  return;
+}
+
+window.location.href = data.url;
+
+};
+
   // Inicializar nombre cuando carga la sesión
   useEffect(() => {
     if (session?.user?.name) setName(session.user.name);
+    
   }, [session]);
 
   // Detectar cambios para habilitar botón
@@ -84,6 +109,27 @@ export default function ProfileContent() {
     }
   };
 
+  const openBillingPortal = async () => {
+  const res = await fetch("/api/stripe/portal", { method: "POST" });
+
+  if (!res.ok) {
+    console.error(await res.text());
+    alert("Failed to open billing portal");
+    return;
+  }
+
+  const data = await res.json();
+
+  if (!data.url) {
+    alert("No portal URL returned");
+    return;
+  }
+
+  window.location.href = data.url;
+};
+
+
+
   return (
     <>
       <NavBar />
@@ -146,23 +192,51 @@ export default function ProfileContent() {
           {/* Botones */}
           <div className="space-y-2">
             <button
-              disabled={!changesMade}
+              
               onClick={saveProfile}
-              className={`w-full py-2 rounded-lg text-white font-medium transition ${
-                changesMade ? "bg-[#001e42] hover:bg-[#DCC9A3]" : "bg-gray-400 cursor-not-allowed"
+              className={`w-full flex-1 bg-[#001e42] text-white py-2.5 rounded-lg hover:bg-[#DCC9A3] transition disabled:opacity-60"
               }`}
             >
               Save Changes
             </button>
 
             <button
-              onClick={() => router.push(`/${locale}/dashboard`)}
-              className="w-full bg-[#001e42] text-white py-2 rounded-lg hover:bg-[#DCC9A3] transition"
+              onClick={() => router.push(`/${locale}/dashboard`)} 
+            
+              className="w-full bg-gray-200 text-gray-800 py-2.5 rounded-lg hover:bg-gray-300 transition"
             >
-              Go to Dashboard
+              ← Back to Dashboard
             </button>
           </div>
         </div>
+
+         {/* Cuadrado blanco */}
+        <div className="max-w-lg mx-auto bg-white p-6 rounded-2xl shadow-md space-y-4 text-left">
+          <label className="block mb-1 font-semibold">Manage Subscriptions</label>
+        {session.user.isPremium ? (
+  <p className="text-green-600 font-semibold">
+    🌟 Premium active
+  </p>
+) : (
+  <button
+    onClick={goPremium}
+    className="w-full flex-1 bg-[#001e42] text-white py-2.5 rounded-lg hover:bg-[#DCC9A3] transition disabled:opacity-60"
+    
+  >
+    Upgrade to Premium
+  </button>
+)}
+
+{session.user.isPremium && (
+  <button
+    onClick={openBillingPortal}
+    className="w-full flex-1 bg-[#001e42] text-white py-2.5 rounded-lg hover:bg-[#DCC9A3] transition disabled:opacity-60"
+  >
+    Manage subscription
+  </button>
+)}
+
+</div>
       </main>
     </>
   );

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import NavBar from "@/components/NavBar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
 import {
   Dialog,
   DialogContent,
@@ -45,11 +46,19 @@ interface ExpenseForm {
   doNotSplit: boolean;
 }
 
-const formatDate = (isoString: string | null | undefined) => {
-  if (!isoString) return "-";
-  const [year, month, day] = isoString.split("-");
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "-";
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
   return `${day}/${month}/${year}`;
 };
+
 
  {/* S
 const predefinedCategories: { type: string; category: string }[] = [
@@ -84,6 +93,18 @@ const locale = params?.locale || "en"; // fallback
   link: "",
   category: "",
 });
+
+function debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  delay = 500
+): (...args: Parameters<T>) => void {
+  let t: ReturnType<typeof setTimeout>;
+  return (...args: Parameters<T>) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+
 
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [expenseForm, setExpenseForm] = useState<ExpenseForm>({
@@ -176,38 +197,73 @@ endDate: r.endDate
     fetchData();
   }, [tripIdNum]);
 
-const saveReservationsAuto = async (updatedRows: ReservationItem[]) => {
+const saveReservationsAuto = debounce(async (updatedRows: ReservationItem[]) => {
   try {
-    const cleaned = updatedRows
-  .filter(r => typeof r.id === "number") // 🔥 NO enviar predefinidas
-  .map(r => ({
-    id: r.id,
-    tripId: tripIdNum,
-    type: r.type,
-    category: r.category,
-    provider: r.provider || "",
-    bookingDate: r.bookingDate ? new Date(r.bookingDate).toISOString() : null,
-    startDate: r.startDate ? new Date(r.startDate).toISOString() : null,
-    endDate: r.endDate ? new Date(r.endDate).toISOString() : null,
-    cancellationDate: r.cancellationDate ? new Date(r.cancellationDate).toISOString() : null,
-    amount: Number(r.amount) || 0,
-    confirmed: r.confirmed || false,
-    link: r.link || "",
-  }));
-
+    const cleaned = [...updatedRows]
+      .filter(r => typeof r.id === "number")
+      .sort((a, b) => Number(a.id) - Number(b.id))
+      .map(r => ({
+        id: r.id,
+        tripId: tripIdNum,
+        type: r.type,
+        category: r.category,
+        provider: r.provider || "",
+        bookingDate: r.bookingDate ? new Date(r.bookingDate).toISOString() : null,
+        startDate: r.startDate ? new Date(r.startDate).toISOString() : null,
+        endDate: r.endDate ? new Date(r.endDate).toISOString() : null,
+        cancellationDate: r.cancellationDate
+          ? new Date(r.cancellationDate).toISOString()
+          : null,
+        amount: Number(r.amount) || 0,
+        confirmed: r.confirmed || false,
+        link: r.link || "",
+      }));
 
     const res = await fetch("/api/reservations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tripId: tripIdNum, reservations: cleaned, userEmail: userId }),
+      body: JSON.stringify({
+        tripId: tripIdNum,
+        reservations: cleaned,
+        userEmail: userId,
+      }),
     });
-    const data = await res.json();
 
-    
+    await res.json();
   } catch (err) {
     console.error("Error auto-saving reservations:", err);
   }
-  
+});
+
+
+const deleteReservation = async (reservation: ReservationItem) => {
+  if (!window.confirm("Are you sure you want to delete this reservation?")) return;
+
+  // snapshot previo
+  const prevRows = rows;
+
+  // optimistic UI
+  const updated = prevRows.filter(r => r.id !== reservation.id);
+  setRows(updated);
+
+  try {
+    if (typeof reservation.id === "number") {
+      const res = await fetch("/api/reservations", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: reservation.id }),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+    }
+
+    // 🔥 autosave DEL ESTADO ACTUAL (sin el borrado)
+    saveReservationsAuto(updated);
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error deleting reservation");
+    setRows(prevRows); // rollback
+  }
 };
 
 
@@ -406,8 +462,9 @@ const submitReservation = async () => {
       <NavBar tripId={String(tripIdNum)} />
       <main className="p-8 space-y-10 bg-gray-50 pt-20">
         <h1 className="text-3xl font-bold mb-4 text-center">✈️ Reservations Tracker</h1>
+        
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
-      Never lose a confirmation again. Store your flights, hotels, transports, and tickets — always accessible, even on the go.
+      Never forget a reservation again. Log all your reservations and check them once you have payed them.
     </p>
 
         {/* Filtro */}
@@ -451,9 +508,9 @@ const submitReservation = async () => {
               <h2 className="font-bold text-xl">{cat}</h2>
               <div className="space-y-3">
                 {items.map((r, i) => {
-                  const globalIndex = rows.findIndex(x => x === r);
+                  
                   return (
-                    <div key={globalIndex} className="bg-white p-5 rounded-xl shadow-md transition hover:shadow-lg relative">
+                    <div key={r.id} className="bg-white p-5 rounded-xl shadow-md transition hover:shadow-lg relative">
                       <div className="flex items-center gap-4">
                         <input
   type="checkbox"
@@ -462,11 +519,12 @@ const submitReservation = async () => {
   onChange={e => {
     const checked = e.target.checked;
     setRows(prev => {
-      const updated = prev.map((x,j) => j===globalIndex ? {...x, confirmed:checked}:x);
-      saveReservationsAuto(updated); // 🟢 guardar automáticamente
-      return updated;
-    });
-
+  const updated = prev.map(x =>
+    x.id === r.id ? { ...x, confirmed: checked } : x
+  );
+  saveReservationsAuto(updated);
+  return updated;
+});
     if (checked) setTimeout(() => openExpenseForm(r), 100);
   }}
 />
@@ -477,22 +535,7 @@ const submitReservation = async () => {
                           <p>From: {formatDate(r.startDate) || "-"} → To: {formatDate(r.endDate) || "-"}</p>
                         </div>
                         <button
-                          onClick={async () => {
-  if (window.confirm("Are you sure you want to delete this reservation?")) {
-    const r = rows[globalIndex];
-    const updated = rows.filter((_, j) => j !== globalIndex);
-setRows(updated);
-saveReservationsAuto(updated); 
-    setRows(prev => prev.filter((_, j) => j !== globalIndex));
-    if (r.id) {
-      await fetch("/api/reservations", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: r.id }),
-      });
-    }
-  }
-}}
+                         onClick={() => deleteReservation(r)}
                           className="absolute top-3 right-4 text-red-500 hover:text-red-700 transition"
                         >
                           ✕
@@ -502,22 +545,32 @@ saveReservationsAuto(updated);
     r.expanded ? "bottom-20" : "bottom-3"
   }`}
 >
-                        <button className="text-gray-400 hover:text-gray-700 transition" onClick={()=>setRows(prev=>prev.map((x,j)=>j===globalIndex ? {...x, expanded:!x.expanded}:x))}>
+                        <button className="text-gray-400 hover:text-gray-700 transition" onClick={() =>
+  setRows(prev =>
+    prev.map(x =>
+      x.id === r.id ? { ...x, expanded: !x.expanded } : x
+    )
+  )
+}
+>
                           {r.expanded ? <ChevronUp /> : <ChevronDown />}
                         </button>
                         </div>
                       </div>
                       
                       {r.expanded && (
+                        
                         <div className="mt-3 text-sm space-y-1">
+                        {/* 
                           <p>
                                   <strong>Provider:</strong> {r.provider || "-"}
                                 </p>
                                 <p>
                                   <strong>Booking Link:</strong> {r.link || "-"}
                                 </p>
-                                
+                                */}
                           <div className="mt-3">
+                          
         <Button
           onClick={() => openReservationForm(r)}
           className="w-full bg-[#001e42] text-white hover:bg-[#DCC9A3] transition"
@@ -581,7 +634,7 @@ saveReservationsAuto(updated);
           </option>
         ))}
       </select>
-
+<div className="flex flex-col space-y-1">
       <label className="text-sm">Description</label>
       <Input
         placeholder="Description"
@@ -591,7 +644,8 @@ saveReservationsAuto(updated);
           setReservationForm({ ...reservationForm, type: e.target.value })
         }
       />
-
+      </div>
+<div className="flex flex-col space-y-1">
 <label className="text-sm">Amount (€)</label>
    <Input
   type="number"
@@ -605,7 +659,8 @@ saveReservationsAuto(updated);
     })
   }
 />
-
+</div>
+<div className="flex flex-col space-y-1">
       <label className="text-sm">Booking Date</label>
       <Input
         type="date"
@@ -615,9 +670,9 @@ saveReservationsAuto(updated);
           setReservationForm({ ...reservationForm, bookingDate: e.target.value })
         }
       />
-
+</div>
   
-
+<div className="flex flex-col space-y-1">
       <label className="text-sm">Start Date</label>
 <Input
   type="date"
@@ -627,7 +682,8 @@ saveReservationsAuto(updated);
     setReservationForm({ ...reservationForm, startDate: e.target.value })
   }
 />
-
+</div>
+<div className="flex flex-col space-y-1">
 <label className="text-sm">End Date</label>
 <Input
   type="date"
@@ -637,7 +693,7 @@ saveReservationsAuto(updated);
     setReservationForm({ ...reservationForm, endDate: e.target.value })
   }
 />
-
+</div>
 {/*
     <label className="text-sm">Cancellation Deadline*</label>
       <Input
@@ -738,6 +794,7 @@ saveReservationsAuto(updated);
         ))}
       </select>
 
+<div className="flex flex-col space-y-1">
   <label className="text-sm">Description</label>
       <Input
         placeholder="Description"
@@ -747,7 +804,8 @@ saveReservationsAuto(updated);
         }
         className="rounded-xl"
       />
-
+</div>
+<div className="flex flex-col space-y-1">
   <label className="text-sm">Amount (€)</label>
       <Input
         type="number"
@@ -761,7 +819,8 @@ saveReservationsAuto(updated);
         }
         className="rounded-xl"
       />
-
+</div>
+<div className="flex flex-col space-y-1">
       <label className="text-sm">Expense Date</label>
       <Input
         type="date"
@@ -772,9 +831,9 @@ saveReservationsAuto(updated);
         className="rounded-xl"
       />
 
-    
+    </div>
 
-
+<div className="flex flex-col space-y-1">
       <label className="text-sm">City/Place</label>
       <Input
         placeholder="City / Place"
@@ -784,7 +843,8 @@ saveReservationsAuto(updated);
         }
         className="rounded-xl"
       />
-
+</div>
+<div className="flex flex-col space-y-1">
       <label className="text-sm">Paid by</label>
       <Input
         placeholder="Paid By"
@@ -795,6 +855,7 @@ saveReservationsAuto(updated);
         className="rounded-xl"
       />
 
+</div>
       <label className="flex items-center gap-2 text-sm text-gray-600 pt-1">
         <input
           type="checkbox"

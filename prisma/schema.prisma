@@ -15,6 +15,11 @@ model User {
   password       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  isPremium       Boolean   @default(false)
+    stripeCustomerId       String?  @unique 
+  stripeSubscriptionId String?
+  subscriptionStatus String? // "active" | "past_due" | "canceled"
+  payment    Payment[]
   trips    Trip[]
 }
 
@@ -37,8 +42,10 @@ model Trip {
   reservations Reservation[]
   checklists   Checklist[]
   expenses     Expense[]
+  payment    Payment[]
   createdAt    DateTime      @default(now())
   hasCompletedBudgetSetup Boolean @default(false)
+  hasPaidForecast Boolean @default(false) // 🔥 PAY PER TRIP FLAG
 }
 
 model Budget {
@@ -124,4 +131,18 @@ model Reminder {
   sent         Boolean  @default(false)
 
   reservation Reservation @relation(fields: [reservationId], references: [id])
+}
+
+model Payment {
+  id        Int @id @default(autoincrement())
+  userId    Int
+  tripId    Int?
+  amount    Float
+  currency  String
+  type      String // "trip" | "subscription"
+  stripeId  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  trip Trip? @relation(fields: [tripId], references: [id])
 }

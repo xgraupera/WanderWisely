@@ -342,7 +342,7 @@ function handleBudgetSetupComplete(totalBudget: number) {
       {trip.name} — Main Overview
     </h1>
     <p className="mt-3 text-gray-600 text-lg leading-relaxed">
-      Welcome to your travel journal. See your trip at a glance — key dates, destinations, and travelers, all beautifully organized in one place.
+      Welcome to your travel journal. See your trip at a glance — key dates, destinations, and travelers, all organized in one place.
     </p>
   </section>
 

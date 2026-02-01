@@ -90,6 +90,39 @@
     "p3": "Somos un pequeño equipo independiente de exploradores, diseñadores y desarrolladores que entendemos los retos de planificar viajes. Tripilot está hecho por viajeros, para viajeros.",
     "footer": "Tu copiloto financiero para viajes largos. ✈️"
   },
+  
+  "loading": {
+    "tripInfo": "Cargando información del viaje...",
+    "expenses": "Cargando gastos..."
+  },
+  "errors": {
+    "network": "❌ Error de red",
+    "saveExpense": "❌ Error al guardar el gasto",
+    "updateExpense": "❌ Error al actualizar el gasto",
+    "deleteExpense": "❌ Error al eliminar el gasto: {{error}}",
+    "tripSave": "❌ No se pudo guardar los cambios del viaje",
+    "tripDate": "La fecha de inicio no puede ser posterior a la fecha de fin",
+    "paidByExceedsTravelers": "❌ Error: Más nombres únicos en 'Pagado por' que viajeros ({{travelers}})",
+    "budgetExceeded": "⚠️ Se espera que excedas tu presupuesto en {{amount}} €"
+  },
+  "success": {
+    "expenseSaved": "✅ Gasto guardado correctamente",
+    "expensesSaved": "✅ Todos los gastos ya están guardados",
+    "tripUpdated": "Detalles del viaje actualizados correctamente"
+  },
+  "alerts": {
+    "waitingUser": "⏳ Esperando información del usuario",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar este gasto?",
+    "confirmRemoveCity": "¿Estás seguro de que deseas eliminar {{city}}?"
+  },
+  "buttons": {
+    "addExpense": "Agregar gasto",
+    "saveExpenses": "Guardar gastos",
+    "saveChanges": "Guardar cambios",
+    "backToDashboard": "← Volver al tablero",
+    "addCity": "+ Agregar ciudad"
+  },
+
   "contactpage": {
     "title": "📬 Contacto",
     "intro": "¡Nos encantaría saber de ti! Ya sea una pregunta, sugerencia o propuesta de colaboración, siempre estamos encantados de conectar con otros viajeros y creadores.",
@@ -157,5 +190,49 @@
     "taskPlaceholder": "Tarea",
     "add": "Añadir",
     "taskRequired": "Introduce un nombre para la tarea."
+  },
+    "expensespage": {
+    "title": "💳 Registro de Gastos",
+    "intro": "Tu viaje, tus números. Registra tus gastos diarios y verifica cómo se alinean con tu presupuesto planeado — disfrutar del viaje también significa entenderlo.",
+    "all": "Todos",
+    "noDescription": "Sin descripción",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar este gasto?",
+    "editExpense": "Editar Gasto",
+    "addExpenseTitle": "Agregar Nuevo Gasto",
+    "editExpenseTitle": "Editar Gasto",
+    "cityPlace": "Ciudad/Lugar",
+    "amountPerTraveler": "Por viajero",
+    "doNotSplit": "No dividir este gasto",
+    "saveChanges": "Guardar Cambios",
+    "addExpense": "Agregar Gasto",
+    "saving": "Guardando..."
+  },
+   "tripmainpage": {
+    "mainOverview": "Vista General",
+    "welcomeIntro": "Bienvenido a tu diario de viaje. Visualiza tu viaje de un vistazo — fechas clave, destinos y viajeros, todo organizado en un solo lugar.",
+    "tripDetails": "Detalles del Viaje",
+    "tripName": "Nombre del Viaje",
+    "travelers": "Viajeros",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "totalBudget": "Presupuesto Total (€)",
+    "remainingBudget": "Presupuesto Restante (€)",
+    "spentSoFar": "Gasto Hasta Ahora (€)",
+    "spentPercentage": "Gasto (%)",
+    "durationDays": "Duración (días)",
+    "saveChanges": "Guardar Cambios",
+    "backDashboard": "← Volver al Dashboard",
+    "quickAccess": "Accesos Rápidos",
+    "budgetPlanning": "Planificación de Presupuesto",
+    "reservationsTracker": "Seguimiento de Reservas",
+    "expensesLog": "Registro de Gastos",
+    "tripItinerary": "Itinerario del Viaje",
+    "travelChecklist": "Checklist de Viaje",
+    "addCity": "+ Agregar Ciudad",
+    "mainWeather": "Clima del Destino Principal",
+    "noCoordinates": "No se encontraron coordenadas para este viaje.",
+    "removeCityConfirm": "¿Estás seguro de que deseas eliminar {{city}}?"
   }
 }

@@ -15,6 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SessionProvider } from "next-auth/react";
+import en from "@/i18n/en.json";
+import es from "@/i18n/es.json";
+
+
 
 
 interface Expense {
@@ -43,7 +47,8 @@ export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const locale = params?.locale || "en"; // 🔹 fallback
+    const locale = params?.locale || "en";
+const t = locale === "es" ? es : en;
   
   const [filter, setFilter] = useState<string>("All");
   const [modalOpen, setModalOpen] = useState(false);
@@ -214,10 +219,10 @@ const saveSingleExpense = async (expense: Expense) => {
 
     if (!res.ok) {
       const result = await res.json();
-      alert("❌ Error updating expense: " + result.error);
+      alert(t.errors.deleteExpense + result.error);
     }
   } catch {
-    alert("❌ Network error updating expense");
+    alert(t.errors.updateExpense);
   }
 };
 
@@ -269,7 +274,7 @@ const saveSingleExpense = async (expense: Expense) => {
 
 */}
 const saveExpenses = async () => {
-  alert("✅ All expenses are already saved");
+  alert("{t.alerts.expensesSaved}");
   await loadData(); // opcional: re-sync con backend
 };
 
@@ -280,7 +285,7 @@ const saveExpenses = async () => {
   // ➕ Add expense (via modal)
 const handleAddExpense = async () => {
   if (!userId) {
-    alert("⏳ Waiting for user info");
+    alert(t.alerts.waitingUser);
     return;
   }
 
@@ -339,7 +344,7 @@ setExpenses((prev) =>
 );
   } catch (err) {
     console.error(err);
-    alert("❌ Error saving expense");
+    alert(t.errors.saveExpense);
 
     // rollback
     setExpenses((prev) => prev.filter((e) => e.tempId !== tempId));
@@ -370,7 +375,7 @@ const deleteExpense = async (index: number) => {
     return;
   }
 
-  if (!window.confirm("Are you sure you want to delete this expense?")) return;
+  if (!window.confirm(t.alerts.confirmDelete)) return;
 
   try {
     // eliminar del backend
@@ -468,7 +473,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
       <SessionProvider>
         <NavBar tripId={tripId} />
         <main className="p-8 text-center bg-gray-50 pt-20">
-          <p className="text-lg text-gray-600">Loading trip information...</p>
+          <p className="text-lg text-gray-600">{t.loading.tripInfo}</p>
         </main>
         </SessionProvider>
       </>
@@ -482,7 +487,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         <h1 className="text-3xl font-bold mb-4 text-center">💳 Expenses Log</h1>
         <p className="text-center text-gray-700 text-lg max-w-2xl mx-auto mt-4 mb-8 leading-relaxed">
   Your journey, your numbers.  
-  Log your daily expenses and see how they align with your planned budget — because enjoying the trip also means understanding it.
+  Log your daily expenses and see how they align with your planned budget.
 </p>
 
         {/* Category Filter */}
@@ -656,7 +661,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           <option key={c}>{c}</option>
         ))}
       </select>
-      
+      <div className="flex flex-col space-y-1">
       <label className="text-sm">Description</label>
       <Input
         placeholder="Description"
@@ -666,6 +671,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         }
         className="rounded-xl"
       />
+      </div>
+      <div className="flex flex-col space-y-1">
       <label className="text-sm">Amount (€)</label>
       <Input
         type="number"
@@ -679,6 +686,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         }
         className="rounded-xl"
       />
+      </div>
+      <div className="flex flex-col space-y-1">
       <label className="text-sm">Expense Date</label>
       <Input
         type="date"
@@ -688,6 +697,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         }
         className="rounded-xl"
       />
+      </div>
+      <div className="flex flex-col space-y-1">
       <label className="text-sm">City/Place</label>
       <Input
         placeholder="City / Place"
@@ -697,6 +708,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         }
         className="rounded-xl"
       />
+      </div>
+      <div className="flex flex-col space-y-1">
       <label className="text-sm">Paid by</label>
       <Input
         placeholder="Paid By"
@@ -706,6 +719,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
         }
         className="rounded-xl"
       />
+      </div>
       <label className="flex items-center gap-2 text-sm text-gray-600 pt-1">
         <input
           type="checkbox"
@@ -768,7 +782,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           ))}
       </select>
 
-
+<div className="flex flex-col space-y-1">
 
         <label className="text-sm">Description</label>
         <Input
@@ -782,6 +796,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           }
           className="rounded-xl"
         />
+        </div>
+<div className="flex flex-col space-y-1">
 
 <label className="text-sm">Amount (€)</label>
         <Input
@@ -796,7 +812,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           }
           className="rounded-xl"
         />
-
+        </div>
+<div className="flex flex-col space-y-1">
         <label className="text-sm">Expense Date</label>
         <Input
           type="date"
@@ -806,7 +823,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           }
           className="rounded-xl"
         />
-        
+        </div>
+        <div className="flex flex-col space-y-1">
         <label className="text-sm">City/Place</label>
                 <Input
           placeholder="City / Place"
@@ -816,6 +834,8 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           }
           className="rounded-xl"
         />
+        </div>
+        <div className="flex flex-col space-y-1">
         <label className="text-sm">Paid By</label>
         <Input
           placeholder="Paid By"
@@ -825,6 +845,7 @@ const sortedExpenses = [...filteredExpenses].sort((a, b) => {
           }
           className="rounded-xl"
         />
+        </div>
         <label className="flex items-center gap-2 text-sm text-gray-600 pt-1">
           <input
             type="checkbox"
